@@ -16,8 +16,8 @@
 
 use crate::tasks::*;
 use crate::handle::handle::TaskHandle;
-use serde::{Deserialize};
-use std::sync::{Arc};
+use serde::Deserialize;
+use std::sync::Arc;
 
 
 const MODULE: &str = "Set";

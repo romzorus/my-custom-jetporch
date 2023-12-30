@@ -18,7 +18,7 @@ use crate::tasks::*;
 use crate::modules::packages::common::{PackageManagementModule,PackageDetails};
 use crate::handle::handle::{TaskHandle,CheckRc};
 use crate::inventory::hosts::PackagePreference;
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::sync::Arc;
 
 const MODULE: &str = "yum_dnf";

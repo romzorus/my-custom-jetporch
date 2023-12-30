@@ -17,7 +17,7 @@
 use crate::tasks::*;
 use crate::handle::handle::{TaskHandle,CheckRc};
 use crate::modules::packages::common::{PackageManagementModule,PackageDetails};
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::sync::Arc;
 
 const MODULE: &str = "pacman";

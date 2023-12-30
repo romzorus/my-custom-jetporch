@@ -16,7 +16,7 @@
 
 use crate::tasks::*;
 use crate::handle::handle::TaskHandle;
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::sync::{Arc,RwLock};
 use serde_json;
 use std::path::PathBuf;

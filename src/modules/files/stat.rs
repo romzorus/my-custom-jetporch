@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::{tasks::*};
+use crate::tasks::*;
 use crate::handle::handle::TaskHandle;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc};
+use std::sync::Arc;
 
 const MODULE: &str = "stat";
 

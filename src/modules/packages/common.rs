@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::tasks::*;
-use crate::handle::handle::{TaskHandle};
+use crate::handle::handle::TaskHandle;
 use crate::tasks::fields::Field;
 use std::sync::Arc;
 

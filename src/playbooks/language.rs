@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use serde::{Deserialize};
+use serde::Deserialize;
 use crate::registry::list::Task;
 
 // all the playbook language YAML structures!

@@ -17,7 +17,7 @@
 use crate::tasks::*;
 use crate::handle::handle::TaskHandle;
 use crate::tasks::fields::Field;
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::sync::Arc;
 use std::vec::Vec;
 use crate::tasks::files::Recurse;

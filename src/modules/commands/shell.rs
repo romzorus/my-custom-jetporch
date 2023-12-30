@@ -17,7 +17,7 @@
 use crate::tasks::*;
 use crate::handle::handle::TaskHandle;
 use crate::connection::command::cmd_info;
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::sync::{Arc,RwLock};
 use crate::inventory::hosts::Host;
 

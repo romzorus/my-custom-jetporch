@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::fs;
-use std::path::{Path};
+use std::path::Path;
 use std::fs::ReadDir;
 use std::os::unix::fs::PermissionsExt;
 use std::process;
