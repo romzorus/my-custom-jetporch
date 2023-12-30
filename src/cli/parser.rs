@@ -44,7 +44,7 @@ pub struct CliParser {
     pub limit_hosts: Vec<String>,
     pub inventory_set: bool,
     pub playbook_set: bool,
-    pub mode: u32,
+    pub mode: CliMode,
     pub needs_help: bool,
     pub needs_version: bool,
     pub show_hosts: Vec<String>,
@@ -64,16 +64,19 @@ pub struct CliParser {
 }
 
 // subcommands are usually required
-// FIXME: convert this to an enum
 
-pub const CLI_MODE_UNSET: u32 = 0;
-pub const CLI_MODE_SYNTAX: u32 = 1;
-pub const CLI_MODE_LOCAL: u32 = 2;
-pub const CLI_MODE_CHECK_LOCAL: u32 = 3;
-pub const CLI_MODE_SSH: u32 = 4;
-pub const CLI_MODE_CHECK_SSH: u32 = 5;
-pub const CLI_MODE_SHOW: u32 = 6;
-pub const CLI_MODE_SIMULATE: u32 = 7;
+#[derive(PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum CliMode {
+    CLI_MODE_UNSET,
+    CLI_MODE_SYNTAX,
+    CLI_MODE_LOCAL,
+    CLI_MODE_CHECK_LOCAL,
+    CLI_MODE_SSH,
+    CLI_MODE_CHECK_SSH,
+    CLI_MODE_SHOW,
+    CLI_MODE_SIMULATE
+}
 
 fn is_cli_mode_valid(value: &String) -> bool {
     match cli_mode_from_string(value) {
@@ -82,14 +85,14 @@ fn is_cli_mode_valid(value: &String) -> bool {
     }
 }
 
-fn cli_mode_from_string(s: &String) -> Result<u32, String> {
+fn cli_mode_from_string(s: &String) -> Result<CliMode, String> {
     return match s.as_str() {
-        "local"           => Ok(CLI_MODE_LOCAL),
-        "check-local"     => Ok(CLI_MODE_CHECK_LOCAL),
-        "ssh"             => Ok(CLI_MODE_SSH),
-        "check-ssh"       => Ok(CLI_MODE_CHECK_SSH),
-        "__simulate"      => Ok(CLI_MODE_SIMULATE),
-        "show-inventory"  => Ok(CLI_MODE_SHOW),
+        "local"           => Ok(CliMode::CLI_MODE_LOCAL),
+        "check-local"     => Ok(CliMode::CLI_MODE_CHECK_LOCAL),
+        "ssh"             => Ok(CliMode::CLI_MODE_SSH),
+        "check-ssh"       => Ok(CliMode::CLI_MODE_CHECK_SSH),
+        "__simulate"      => Ok(CliMode::CLI_MODE_SIMULATE),
+        "show-inventory"  => Ok(CliMode::CLI_MODE_SHOW),
         _ => Err(format!("invalid mode: {}", s))
     }
 }
@@ -317,7 +320,7 @@ impl CliParser  {
             module_paths: Arc::new(RwLock::new(Vec::new())),
             needs_help: false,
             needs_version: false,
-            mode: CLI_MODE_UNSET,
+            mode: CliMode::CLI_MODE_UNSET,
             show_hosts: Vec::new(),
             show_groups: Vec::new(),
             batch_size: None,
@@ -498,11 +501,11 @@ impl CliParser  {
 
         // make adjustments based on modes
         match self.mode {
-            CLI_MODE_LOCAL       => { self.threads = 1 },
-            CLI_MODE_CHECK_LOCAL => { self.threads = 1 },
-            CLI_MODE_SYNTAX      => { self.threads = 1 },
-            CLI_MODE_SHOW        => { self.threads = 1 },
-            CLI_MODE_UNSET       => { self.needs_help = true; },
+            CliMode::CLI_MODE_LOCAL       => { self.threads = 1 },
+            CliMode::CLI_MODE_CHECK_LOCAL => { self.threads = 1 },
+            CliMode::CLI_MODE_SYNTAX      => { self.threads = 1 },
+            CliMode::CLI_MODE_SHOW        => { self.threads = 1 },
+            CliMode::CLI_MODE_UNSET       => { self.needs_help = true; },
             _ => {}
         }
 
@@ -581,7 +584,8 @@ impl CliParser  {
     fn append_inventory(&mut self, value: &String) -> Result<(), String> {
 
         self.inventory_set = true;
-        if self.mode == CLI_MODE_LOCAL || self.mode == CLI_MODE_CHECK_LOCAL {
+        if self.mode == CliMode::CLI_MODE_LOCAL || self.mode == CliMode::CLI_MODE_CHECK_LOCAL {
+
             return Err(format!("--inventory cannot be specified for local modes"));
         }
 
