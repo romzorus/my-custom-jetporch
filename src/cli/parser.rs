@@ -74,7 +74,7 @@ pub enum CliMode {
     CLI_MODE_CHECK_LOCAL,
     CLI_MODE_SSH,
     CLI_MODE_CHECK_SSH,
-    CLI_MODE_SHOW,
+    CLI_MODE_SHOW_INVENTORY,
     CLI_MODE_SIMULATE
 }
 
@@ -92,7 +92,7 @@ fn cli_mode_from_string(s: &String) -> Result<CliMode, String> {
         "ssh"             => Ok(CliMode::CLI_MODE_SSH),
         "check-ssh"       => Ok(CliMode::CLI_MODE_CHECK_SSH),
         "__simulate"      => Ok(CliMode::CLI_MODE_SIMULATE),
-        "show-inventory"  => Ok(CliMode::CLI_MODE_SHOW),
+        "show-inventory"  => Ok(CliMode::CLI_MODE_SHOW_INVENTORY),
         _ => Err(format!("invalid mode: {}", s))
     }
 }
@@ -504,7 +504,7 @@ impl CliParser  {
             CliMode::CLI_MODE_LOCAL       => { self.threads = 1 },
             CliMode::CLI_MODE_CHECK_LOCAL => { self.threads = 1 },
             CliMode::CLI_MODE_SYNTAX      => { self.threads = 1 },
-            CliMode::CLI_MODE_SHOW        => { self.threads = 1 },
+            CliMode::CLI_MODE_SHOW_INVENTORY        => { self.threads = 1 },
             CliMode::CLI_MODE_UNSET       => { self.needs_help = true; },
             _ => {}
         }

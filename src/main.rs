@@ -55,7 +55,7 @@ fn liftoff() -> Result<(),String> {
     let inventory : Arc<RwLock<Inventory>> = Arc::new(RwLock::new(Inventory::new()));
 
     match cli_parser.mode {
-        cli::parser::CliMode::CLI_MODE_SSH | cli::parser::CliMode::CLI_MODE_CHECK_SSH | cli::parser::CliMode::CLI_MODE_SHOW | cli::parser::CliMode::CLI_MODE_SIMULATE => {
+        cli::parser::CliMode::CLI_MODE_SSH | cli::parser::CliMode::CLI_MODE_CHECK_SSH | cli::parser::CliMode::CLI_MODE_SHOW_INVENTORY | cli::parser::CliMode::CLI_MODE_SIMULATE => {
             load_inventory(&inventory, Arc::clone(&cli_parser.inventory_paths))?;
             if ! cli_parser.inventory_set {
                 return Err(String::from("--inventory is required"));
@@ -70,7 +70,7 @@ fn liftoff() -> Result<(),String> {
     };
 
     match cli_parser.mode {
-        cli::parser::CliMode::CLI_MODE_SHOW => {},
+        cli::parser::CliMode::CLI_MODE_SHOW_INVENTORY => {},
         _ => {
             if ! cli_parser.playbook_set {
                 return Err(String::from("--playbook is required"));
@@ -83,7 +83,7 @@ fn liftoff() -> Result<(),String> {
     };
 
     let exit_status = match cli_parser.mode {
-        cli::parser::CliMode::CLI_MODE_SHOW   => match handle_show(&inventory, &cli_parser) {
+        cli::parser::CliMode::CLI_MODE_SHOW_INVENTORY   => match handle_show(&inventory, &cli_parser) {
             Ok(_) => 0,
             Err(s) => {
                 println!("{}", s);
