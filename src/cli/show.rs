@@ -144,4 +144,57 @@ pub fn show_inventory_group(inventory: &Arc<RwLock<Inventory>>, group_name: &Str
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn test_show_inventory_host_missing_host() {
+        let empty_inventory : Arc<RwLock<Inventory>> = Arc::new(RwLock::new(Inventory::new()));
+        let missing_host_name = String::from("missing_host_name");
+
+        assert_eq!(
+            show_inventory_host(&empty_inventory, &missing_host_name),
+            Err(format!("no such host: {}", missing_host_name))
+        );
+    }
+
+    #[test]
+    fn test_show_inventory_group_missing_group() {
+        let empty_inventory : Arc<RwLock<Inventory>> = Arc::new(RwLock::new(Inventory::new()));
+        let missing_group_name = String::from("missing_group_name");
+
+        assert_eq!(
+            show_inventory_group(&empty_inventory, &missing_group_name),
+            Err(format!("no such group: {}", missing_group_name))
+        );
+    }
+
+    #[test]
+    fn test_string_slice_small() {
+        let mut values: Vec<String> = Vec::with_capacity(400);
+
+        for _ in 0..400 {
+            values.push(String::from("0"));
+        }
+        
+        assert_eq!(
+            string_slice(&values),
+            values.join(", ")
+        )
+    }
+
+    #[test]
+    fn test_string_slice_big() {
+        let mut values: Vec<String> = Vec::with_capacity(600);
+
+        for _ in 0..600 {
+            values.push(String::from("0"));
+        }
+        
+        assert_eq!(
+            string_slice(&values),
+            format!("{}, ...", values[0..499].to_vec().join(", "))
+        )
+    }
+}
