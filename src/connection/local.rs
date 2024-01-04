@@ -50,7 +50,7 @@ impl LocalFactory {
 
         let host = inventory.read().expect("inventory read").get_host(&String::from("localhost"));
         let mut lc = LocalConnection::new(&Arc::clone(&host));
-        lc.connect().expect("connection ok");
+        lc.connect().expect("connection to localhost");
         Self {
             inventory: Arc::clone(&inventory),
             local_connection: Arc::new(Mutex::new(lc))
