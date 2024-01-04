@@ -34,7 +34,6 @@ use std::path::Path;
 use std::time::Duration;
 use std::net::ToSocketAddrs;
 use std::fs::File;
-//use std::io;
 use std::io;
 
 // implementation for both Ssh Connections and the Ssh Connection factory
