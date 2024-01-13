@@ -1,3 +1,4 @@
 [alias]
-# Testing with docker requires to avoir parallelism
+# Testing with docker requires to avoid parallelism, the same way a playbook is executed
+# one task at a time on a host.
 testdocker = "test -- --show-output --test-threads=1"
