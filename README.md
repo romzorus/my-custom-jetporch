@@ -10,7 +10,8 @@ On 23th december 2023, Michael DeHaan sent a newsletter ("Discontinuing Jet") in
     - Integration tests added for UNSET and SHOW-INVENTORY CLI modes
 
 ## In progress
-* Still focusing on tests : once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.
+* Still focusing on tests : *once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.*
+    * Building an automated Docker lab to run the integration tests in : `cargo test` will result in creating multiple containers (multiple linux distributions), running playbooks and modules on them, and deleting everything. This way, when it applies, each modification/module/commit can be tested with a real SSH connexion and on multiple distributions at the same time.
 
 ## Plans for the future
 
