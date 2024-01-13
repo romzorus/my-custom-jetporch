@@ -8,9 +8,9 @@ then
     ssh-keygen -t ed25519 -f controller_key -N "" -q
 fi
 
-# The 'containers-info.json' file will be used by the actual integration tests, both as a
-# file locking item and as a source of information on the hosts (inventory building for example).
-# For now, we a building it in JSON format, as an array of objects.
+# The 'containers-info.json' file will be used by the actual integration tests
+# as a source of information on the hosts (inventory building for example).
+# For now, we are building it in JSON format, as an array of objects.
 
 # Opening an array in the JSON file
 echo "[" >> containers-info.json
