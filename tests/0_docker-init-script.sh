@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd tests
 # To have a passwordless root access, we need keys. If it hasn't already been done,
 # let's generate keys in order to have it allowed in the containers later.
 if [ ! -f controller_key ] || [ ! -f controller_key.pub ]

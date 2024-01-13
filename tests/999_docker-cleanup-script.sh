@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd tests
 # This script is run at the end of the integration tests.
 
 # Here we stop and remove all the containers.
