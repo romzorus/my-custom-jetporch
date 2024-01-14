@@ -16,7 +16,7 @@
 The goal here is to test each module on the main Linux distributions in a lab based on Docker containers. For each commit/update/fix, the `cargo testdocker` needs to succeed. Otherwise, it means what we did just broke something elsewhere.
 
 Here is an illustration of how it is done so far
-![Testing with Docker](/tests/test-illustration.png){width=75%}
+![Testing with Docker](/tests/test-illustration.png)
 
 **Feel free to send comments and contributions if you feel like it !**
 
