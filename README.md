@@ -18,6 +18,9 @@ The goal here is to test each module on the main Linux distributions in a lab ba
 Here is an illustration of how it is done so far
 ![Testing with Docker](/tests/test-illustration.png)
 
+Before running `cargo testdocker`, you need to install [docker](https://docs.docker.com/get-docker/). Also, to avoid permission issues, please add your user to the `docker` group in order to use the `docker` command without root privileges. This can be done with this command : `sudo usermod -aG docker $USER`
+
+
 **Feel free to send comments and contributions if you feel like it !**
 
 # Context
