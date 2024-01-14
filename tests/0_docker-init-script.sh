@@ -1,5 +1,17 @@
 #!/bin/bash
+
+echo "Init script launched..."
+
 cd tests
+
+# First, we check if the situation is clear. If something went wrong before the cleanup script
+# had a chance to run last time, we will have some residual datas that we need to clean.
+# If containers-info.json is not empty, run the cleanup script first.
+if [ -s "containers-info.json" ]
+then
+    ./999_docker-cleanup-script.sh
+fi
+
 # To have a passwordless root access, we need keys. If it hasn't already been done,
 # let's generate keys in order to have it allowed in the containers later.
 if [ ! -f controller_key ] || [ ! -f controller_key.pub ]
@@ -13,7 +25,8 @@ fi
 # For now, we are building it in JSON format, as an array of objects.
 
 # Opening an array in the JSON file
-echo "[" >> containers-info.json
+echo "{" >> containers-info.json
+echo '"containers_list": [' >> containers-info.json
 
 # Here we list all the Dockerfiles available
 DOCKERFILES_LIST=$(find Dockerfiles-folder -type f -name "Dockerfile-*")
@@ -30,10 +43,10 @@ do
     ContainerPubKey=$(ssh-keyscan $ContainerIP)
 
     # Filling the JSON file with container's informations
-    echo {\"container-name\" : \"jet-host-$OsName\", >> containers-info.json
-    echo \"container-id\" : \"$ContainerID\", >> containers-info.json
-    echo \"container-ip\" : \"$ContainerIP\", >> containers-info.json
-    echo \"container-pubkey\" : \"$ContainerPubKey\"}, >> containers-info.json
+    echo {\"container_name\" : \"jet-host-$OsName\", >> containers-info.json
+    echo \"container_id\" : \"$ContainerID\", >> containers-info.json
+    echo \"container_ip\" : \"$ContainerIP\", >> containers-info.json
+    echo \"container_pubkey\" : \"$ContainerPubKey\"}, >> containers-info.json
 
     # Having the container's key allowed on the host to avoid the usual StrictHostKeyChecking issues
     if [ -e ~/.ssh/known_hosts ]
@@ -46,5 +59,9 @@ do
     
 done
 
+# The last line ends with "}," (unvalid JSON syntax) which needs to be changed to "}".
+sed -i '$ s@},@}@g' containers-info.json
+
 # Closing the array of the JSON file
 echo "]" >> containers-info.json
+echo "}" >> containers-info.json
