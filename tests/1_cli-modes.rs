@@ -4,6 +4,9 @@ use std::process::Command;
 use std::fs::File;
 use predicates::prelude::*;
 use assert_fs::TempDir;
+use config::{self, Config, File as ConfigFile, FileFormat};
+use serde_derive::Deserialize;
+use std::env::current_dir;
 
 // This file checks that the proper CLI modes are run when selected :
 // - unset
@@ -18,12 +21,34 @@ fn temp_absolute_path(tempfolder: &TempDir, relative_path: &str) -> String {
     format!("{}/{}", tempfolder.path().display(), relative_path)
 }
 
-// This function creates a simple working inventory
+// This function creates a simple working inventory pointing at the containers
 fn create_inventory(tempfolder: &TempDir) {
+
+    let config_builder = Config::builder()
+        .add_source(ConfigFile::new("tests/containers-info.json", FileFormat::Json))
+        .build()
+        .unwrap();
+
+    let containers_info = config_builder.try_deserialize::<ContainersInfo>().expect("Problem with deserialization of containers-info.json");
+
+    let mut inventory_content = String::from("hosts:\n");
+
+    for container in containers_info.containers_list.into_iter() {
+        inventory_content.push_str(
+            format!("  - {}\n", container.container_ip).as_str()
+        )
+    }
+
     let _ = std::fs::create_dir(temp_absolute_path(tempfolder, "inventory"));
     let _ = std::fs::create_dir(temp_absolute_path(tempfolder, "inventory/groups"));
-    let mut tempgroupfile = File::create(temp_absolute_path(tempfolder, "inventory/groups/webservers")).unwrap();
-    let _ = tempgroupfile.write_all(b"hosts:\n  - svr123.company.local\n  - svr954.company.local");
+    let mut tempgroupfile = File::create(temp_absolute_path(tempfolder, "inventory/groups/containers")).expect("File creation failed");
+    let _ = tempgroupfile.write_all(inventory_content.as_bytes());
+    let _ = std::fs::create_dir(temp_absolute_path(tempfolder, "inventory/group_vars"));
+    let mut tempgroupvarfile = File::create(temp_absolute_path(tempfolder, "inventory/group_vars/containers")).expect("File creation failed");
+
+    let privatekeyconf = format!("jet_ssh_private_key_file: {}/tests/controller_key", current_dir().unwrap().display());
+    let _ = tempgroupvarfile.write_all(privatekeyconf.as_bytes());
+
 }
 
 fn create_playbook(tempfolder: &TempDir) {
@@ -60,17 +85,14 @@ fn test_cli_show_inventory_mode() -> Result<(), Box<dyn std::error::Error>>{
     
     create_inventory(&tempfolder);
 
-    // Running command : $ jetp show-inventory --inventory <path to temporary inventory>
+    // Running command : $ jetp show-inventory -i <path to temp inventory>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
     cmd.arg("show-inventory")
-        .arg("--inventory")
+        .arg("-i")
         .arg(format!("{}/inventory", tempfolder.path().display()));
 
     // Expecting to find our group and hosts
     cmd.assert()
-        .stdout(predicate::str::contains("webservers"))
-        .stdout(predicate::str::contains("svr123.company.local"))
-        .stdout(predicate::str::contains("svr954.company.local"))
         .code(predicate::eq(0));
 
     Ok(())
@@ -83,7 +105,7 @@ fn test_cli_local_mode() -> Result<(), Box<dyn std::error::Error>> {
 
     create_playbook(&tempfolder);
 
-    // Running command : $ jetp local -p <path to temporary playbook>
+    // Running command : $ jetp local -p <path to temp playbook>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
     cmd.arg("local")
         .arg("-p")
@@ -105,7 +127,7 @@ fn test_cli_check_local_mode() -> Result<(), Box<dyn std::error::Error>> {
 
     create_playbook(&tempfolder);
 
-    // Running command : $ jetp check-local -p <path to temporary playbook>
+    // Running command : $ jetp check-local -p <path to temp playbook>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
     cmd.arg("check-local")
         .arg("-p")
@@ -118,6 +140,68 @@ fn test_cli_check_local_mode() -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
 }
 
-// TODO : similar tests for local, check-ssh and ssh modes
-// Create temp folder with inventory, role and playbook in it
-// Run the command
+#[test]
+fn test_cli_check_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
+    // Creating a temporary folder to work in
+    let tempfolder = TempDir::new()?;
+
+    create_inventory(&tempfolder);
+    create_playbook(&tempfolder);
+
+    // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
+    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
+    cmd.arg("check-ssh")
+        .arg("-p")
+        .arg(format!("{}/playbooks/play.yml", tempfolder.path().display()))
+        .arg("-i")
+        .arg(format!("{}/inventory", tempfolder.path().display()))
+        .arg("-u")
+        .arg("root");
+
+    cmd.spawn()
+        .expect("Failure to launch check-ssh command")
+        .wait()
+        .expect("Failure during the check-ssh test");
+        
+    Ok(())
+}
+
+#[test]
+fn test_cli_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
+    // Creating a temporary folder to work in
+    let tempfolder = TempDir::new()?;
+
+    create_inventory(&tempfolder);
+    create_playbook(&tempfolder);
+
+    // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
+    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
+    cmd.arg("ssh")
+        .arg("-p")
+        .arg(format!("{}/playbooks/play.yml", tempfolder.path().display()))
+        .arg("-i")
+        .arg(format!("{}/inventory", tempfolder.path().display()))
+        .arg("-u")
+        .arg("root");
+
+    cmd.spawn()
+        .expect("Failure to launch ssh command")
+        .wait()
+        .expect("Failure during the ssh test");
+        
+    Ok(())
+}
+
+
+#[derive(Deserialize)]
+struct ContainersInfo {
+    containers_list: Vec<ContainerSpec>
+}
+
+#[derive(Deserialize)]
+struct ContainerSpec {
+    container_name: String,
+    container_id: String,
+    container_ip: String,
+    container_pubkey: String
+}

@@ -1,0 +1,10 @@
+FROM ubuntu:latest
+
+# Install ssh server and configure it to allow passwordless root access
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+COPY controller_key.pub /root/.ssh/authorized_keys
+RUN ssh-keygen -A
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
