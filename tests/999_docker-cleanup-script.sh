@@ -1,6 +1,16 @@
 #!/bin/bash
+
+echo "Clean up script launched..."
+
 cd tests
 # This script is run at the end of the integration tests.
+
+CONTAINERS_JET_HOST=$(docker ps | grep jet-host- | cut -d " " -f 1)
+for ContainerJetHostID in $CONTAINERS_JET_HOST
+do
+    docker stop $ContainerJetHostID
+    docker rm -f $ContainerJetHostID
+done
 
 # Here we stop and remove all the containers.
 CONTAINERS_ID_LIST=$(cat containers-info.json | grep "container-id" | cut -d '"' -f 4)
