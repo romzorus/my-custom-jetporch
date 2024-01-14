@@ -1,23 +1,22 @@
-# Context
-
-On 23th december 2023, Michael DeHaan sent a newsletter ("Discontinuing Jet") in which he announced that he has decided to not work on Jet any more. This repository has been created by me as a way to continue to explore Rust and learn from this great project, even if it doesn't lead anywhere. It was forked from [here](https://github.com/jetporch/jetporch) and renamed **my-custom-jetporch** in order to avoid confusion with the original project. Even if the basecode is 100% jetporch at the beginning, I want to make it evolve without restriction, merge branches...etc in an opinionated way, which can't be done with only a fork.
-
 # Evolutions so far
-
 ## Already done
 * Focus on testing (`cargo test`) in the `testing` branch
     - Unit tests added for `src/cli/show.rs`
-    - Integration tests added for UNSET and SHOW-INVENTORY CLI modes
+    - Integration tests added for CLI modes UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
+    - Automated integration tests on a Docker lab : integration tests are made, through ssh, on Docker containers based on the main Linux distributions. To test this way, use the following command : `cargo testdocker`
 
 ## In progress
 * Still focusing on tests : *once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.*
-    * Building an automated Docker lab to run the integration tests in : `cargo test` will result in creating multiple containers (multiple linux distributions), running playbooks and modules on them, and deleting everything. This way, when it applies, each modification/module/commit can be tested with a real SSH connexion and on multiple distributions at the same time.
+
 
 ## Plans for the future
 
 
 **Feel free to send comments and contributions if you feel like it !**
 
+# Context
+
+On 23th december 2023, Michael DeHaan sent a newsletter ("Discontinuing Jet") in which he announced that he has decided to not work on Jet any more. This repository has been created by me as a way to continue to explore Rust and learn from this great project, even if it doesn't lead anywhere. It was forked from [here](https://github.com/jetporch/jetporch) and renamed **my-custom-jetporch** in order to avoid confusion with the original project. Even if the basecode is 100% jetporch at the beginning, I want to make it evolve without restriction, merge branches...etc in an opinionated way, which can't be done with only a fork.
 
 # Jetporch - the Jet Enterprise Professional Orchestrator
 
