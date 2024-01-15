@@ -7,13 +7,14 @@
 
 ## In progress
 * Still focusing on tests : *once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.*
+    ** creating integration tests for a maximum of modules
 
 
 ## Plans for the future
 
 # Testing the app with Docker
 
-The goal here is to test each module on the main Linux distributions in a lab based on Docker containers. For each commit/update/fix, the `cargo testdocker` needs to succeed. Otherwise, it means what we did just broke something elsewhere.
+The goal here is to test each module on the main Linux distributions in a lab based on Docker containers. For each commit/update/fix, `cargo testdocker` needs to succeed. Otherwise, it means what we did just broke something elsewhere.
 
 Here is an illustration of how it is done so far
 ![Testing with Docker](/tests/test-illustration.png)
