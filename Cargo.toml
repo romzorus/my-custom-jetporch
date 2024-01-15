@@ -31,7 +31,7 @@ indexmap = {version = "2.1.0", features = ["serde"]}
 chrono="0.4.31"
 
 [dev-dependencies]
+testinglib = { path="testinglib"}
 assert_fs="1.1.0"
 assert_cmd="2.0.12"
 predicates="3.0.4"
-config = "0.13.3"
