@@ -14,7 +14,6 @@ use testinglib::*;
 // - ssh
 
 
-
 #[test]
 fn test_cli_unset_mode() -> Result<(), Box<dyn std::error::Error>>{
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
@@ -106,11 +105,11 @@ fn test_cli_check_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-u")
         .arg("root");
 
-    cmd.spawn()
-        .expect("Failure to launch check-ssh command")
-        .wait()
-        .expect("Failure during the check-ssh test");
-        
+    cmd.assert()
+        .stdout(predicate::str::contains("> play complete: show facts"))
+        .stdout(predicate::str::contains("(✓) Perfect. All hosts matched policy."))
+        .code(predicate::eq(0));
+
     Ok(())
 }
 
@@ -132,10 +131,10 @@ fn test_cli_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
         .arg("-u")
         .arg("root");
 
-    cmd.spawn()
-        .expect("Failure to launch ssh command")
-        .wait()
-        .expect("Failure during the ssh test");
+    cmd.assert()
+        .stdout(predicate::str::contains("> play complete: show facts"))
+        .stdout(predicate::str::contains("(✓) Perfect. All hosts matched policy."))
+        .code(predicate::eq(0));
         
     Ok(())
 }
