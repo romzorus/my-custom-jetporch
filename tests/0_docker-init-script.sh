@@ -1,8 +1,7 @@
 #!/bin/bash
 
-echo "Init script launched..."
 
-cd tests
+echo "Init script launched..."
 
 # First, we check if the situation is clear. If something went wrong before the cleanup script
 # had a chance to run last time, we will have some residual datas that we need to clean.
@@ -11,6 +10,8 @@ if [ -s "containers-info.json" ]
 then
     ./999_docker-cleanup-script.sh
 fi
+
+cd tests
 
 # To have a passwordless root access, we need keys. If it hasn't already been done,
 # let's generate keys in order to have it allowed in the containers later.
