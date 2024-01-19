@@ -61,10 +61,11 @@ pub fn create_inventory(tempfolder: &TempDir, containerslistname: &str) {
 
 }
 
-pub fn create_playbook(tempfolder: &TempDir) {
+pub fn create_playbook(tempfolder: &TempDir, playbookcontent: &str) {
     let _ = std::fs::create_dir(temp_absolute_path(tempfolder, "playbooks"));
     let mut tempplaybookfile = File::create(temp_absolute_path(tempfolder, "playbooks/play.yml")).unwrap();
-    let _ = tempplaybookfile.write_all(b"- name: show facts\n  groups:\n    - all\n  tasks:\n    - !facts\n    - !debug");
+    // let _ = tempplaybookfile.write_all(b"- name: show facts\n  groups:\n    - all\n  tasks:\n    - !facts\n    - !debug");
+    let _ = tempplaybookfile.write_all(playbookcontent.as_bytes());
 }
 
 pub fn create_role(tempfolder: &TempDir) {
