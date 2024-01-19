@@ -52,7 +52,14 @@ fn test_cli_local_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
-    create_playbook(&tempfolder);
+    let playbookcontent = r"---
+- name: show facts
+  groups:
+    - all
+  tasks:
+    - !facts";
+
+    create_playbook(&tempfolder, playbookcontent);
 
     // Running command : $ jetp local -p <path to temp playbook>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
@@ -74,7 +81,14 @@ fn test_cli_check_local_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
-    create_playbook(&tempfolder);
+    let playbookcontent = r"---
+- name: show facts
+  groups:
+    - all
+  tasks:
+    - !facts";
+
+    create_playbook(&tempfolder, playbookcontent);
 
     // Running command : $ jetp check-local -p <path to temp playbook>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
@@ -96,7 +110,15 @@ fn test_cli_check_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
 
     docker_init("containers-list-check-ssh-test.json", "check-ssh");
     create_inventory(&tempfolder, "containers-list-check-ssh-test.json");
-    create_playbook(&tempfolder);
+
+    let playbookcontent = r"---
+- name: show facts
+  groups:
+    - all
+  tasks:
+    - !facts";
+
+    create_playbook(&tempfolder, playbookcontent);
 
     // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
@@ -124,7 +146,15 @@ fn test_cli_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
 
     docker_init("containers-list-ssh-test.json", "ssh");
     create_inventory(&tempfolder, "containers-list-ssh-test.json");
-    create_playbook(&tempfolder);
+
+    let playbookcontent = r"---
+- name: show facts
+  groups:
+    - all
+  tasks:
+    - !facts";
+
+    create_playbook(&tempfolder, playbookcontent);
 
     // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
