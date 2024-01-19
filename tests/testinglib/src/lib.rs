@@ -4,7 +4,27 @@ use assert_fs::TempDir;
 use config::{self, Config, File as ConfigFile, FileFormat};
 use serde_derive::Deserialize;
 use std::env::current_dir;
+use std::process::Command;
 
+// This function launches the script responsible for creating containers as well
+// as container list in JSON format.
+pub fn docker_init(containerslistname: &str, moduletested: &str) {
+    let _ = Command::new("tests/docker-scripts/docker-init.sh")
+        .arg(containerslistname)
+        .arg(moduletested)
+        .output()
+        .expect("Problem launching the init script");
+}
+
+// This function launches the script responsible for cleaning up containers (and list)
+// at the end of a test.
+pub fn docker_cleanup(containerslistname: &str, moduletested: &str) {
+    let _ = Command::new("tests/docker-scripts/docker-cleanup.sh")
+        .arg(containerslistname)
+        .arg(moduletested)
+        .output()
+        .expect("Problem launching the cleanup script");
+}
 
 // This function simplifies the way to write absolute path based on the temporary folder created by each test
 pub fn temp_absolute_path(tempfolder: &TempDir, relative_path: &str) -> String {
@@ -12,14 +32,14 @@ pub fn temp_absolute_path(tempfolder: &TempDir, relative_path: &str) -> String {
 }
 
 // This function creates a simple working inventory pointing at the containers
-pub fn create_inventory(tempfolder: &TempDir) {
+pub fn create_inventory(tempfolder: &TempDir, containerslistname: &str) {
 
     let config_builder = Config::builder()
-        .add_source(ConfigFile::new("tests/containers-info.json", FileFormat::Json))
+        .add_source(ConfigFile::new(format!("tests/{}", containerslistname).as_str(), FileFormat::Json))
         .build()
         .unwrap();
 
-    let containers_info = config_builder.try_deserialize::<ContainersInfo>().expect("Problem with deserialization of containers-info.json");
+    let containers_info = config_builder.try_deserialize::<ContainersInfo>().expect(format!("Problem with deserialization of {}", containerslistname).as_str());
 
     let mut inventory_content = String::from("hosts:\n");
 
