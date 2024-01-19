@@ -30,7 +30,8 @@ fn test_cli_show_inventory_mode() -> Result<(), Box<dyn std::error::Error>>{
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
     
-    create_inventory(&tempfolder);
+    docker_init("containers-list-show-inventory-test.json", "show-inventory");
+    create_inventory(&tempfolder, "containers-list-show-inventory-test.json");
 
     // Running command : $ jetp show-inventory -i <path to temp inventory>
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
@@ -42,6 +43,7 @@ fn test_cli_show_inventory_mode() -> Result<(), Box<dyn std::error::Error>>{
     cmd.assert()
         .code(predicate::eq(0));
 
+    docker_cleanup("containers-list-show-inventory-test.json", "show-inventory");
     Ok(())
 }
 
@@ -92,7 +94,8 @@ fn test_cli_check_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
-    create_inventory(&tempfolder);
+    docker_init("containers-list-check-ssh-test.json", "check-ssh");
+    create_inventory(&tempfolder, "containers-list-check-ssh-test.json");
     create_playbook(&tempfolder);
 
     // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
@@ -110,6 +113,7 @@ fn test_cli_check_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains("(✓) Perfect. All hosts matched policy."))
         .code(predicate::eq(0));
 
+    docker_cleanup("containers-list-check-ssh-test.json", "check-ssh");
     Ok(())
 }
 
@@ -118,7 +122,8 @@ fn test_cli_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
-    create_inventory(&tempfolder);
+    docker_init("containers-list-ssh-test.json", "ssh");
+    create_inventory(&tempfolder, "containers-list-ssh-test.json");
     create_playbook(&tempfolder);
 
     // Running command : $ jetp check-ssh -p <path to temp playbook> -i <path to temp inventory> -u root
@@ -135,6 +140,7 @@ fn test_cli_ssh_mode() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains("> play complete: show facts"))
         .stdout(predicate::str::contains("(✓) Perfect. All hosts matched policy."))
         .code(predicate::eq(0));
-        
+    
+    docker_cleanup("containers-list-ssh-test.json", "ssh");
     Ok(())
 }
