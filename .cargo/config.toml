@@ -1,4 +1,2 @@
 [alias]
-# Testing with docker requires to avoid parallelism, the same way a playbook is executed
-# one task at a time on a host.
-testdocker = "test  --no-fail-fast -- --test-threads=1"
+testdocker = "test -- --test-threads=10"
