@@ -11,7 +11,7 @@ cd tests
 # If containers-info.json is not empty, run the cleanup script first.
 if [ -s $ContainerList ]
 then
-    /docker-scripts/docker-cleanup.sh $ContainerList $ModuleName
+    ./docker-scripts/docker-cleanup.sh $ContainerList $ModuleName
 fi
 
 # To have a passwordless root access, we need keys. If it hasn't already been done,
