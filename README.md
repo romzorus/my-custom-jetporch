@@ -2,8 +2,9 @@
 ## Already done
 * Focus on testing (`cargo test`) in the `testing` branch
     - Unit tests added for `src/cli/show.rs`
-    - Integration tests added for CLI modes UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
-    - Automated integration tests on a Docker lab : integration tests are made, through ssh, on Docker containers based on the main Linux distributions.
+    - Automated integration tests on a Docker lab : integration tests are made, through ssh, on Docker containers based on the main Linux distributions :
+        - CLI modes : UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
+        - Modules : shell
 
 ## In progress
 * Still focusing on tests : *once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.*
