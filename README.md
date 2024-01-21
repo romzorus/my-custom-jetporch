@@ -22,7 +22,7 @@ The goal here is to test each module on the main Linux distributions in a Docker
 
 Before running `cargo test`, you need to install [docker](https://docs.docker.com/get-docker/). Also, to avoid permission issues, please add your user to the `docker` group in order to use the `docker` command without root privileges. This can be done with this command : `sudo usermod -aG docker $USER`.
 
-Because `cargo` runs tests in parallel, you might encounter memory issues because lots of containers will be running at the same time. To avoid this, you can limit the number of tests running at the same time by limiting the number of threads : `cargo test -- ----test-threads=4` means you will only have a maximum of 4 sets of containers running at any given moment. The total memory required by one set of containers can vary from 15MB to 150MB or even more, depending on what you are doing with it.
+Because `cargo` runs tests in parallel, you might encounter memory issues because lots of containers will be running at the same time. To avoid this, you can limit the number of tests running at the same time by limiting the number of threads : `cargo test -- --test-threads=4` means you will only have a maximum of 4 sets of containers running at any given moment. The total memory required by one set of containers can vary from 15MB to 150MB or even more, depending on what you are doing with it.
 
 **If you have limited ressources, it is recommended to use this command : `cargo testdocker`, which is an alias for `cargo test -- --test-threads=10`. Otherwise, just run `cargo test`.**
 
