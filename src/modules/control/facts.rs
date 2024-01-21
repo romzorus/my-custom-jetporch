@@ -145,17 +145,25 @@ impl FactsAction {
                 self.insert_string(mapping, &format!("jet_os_release_{}", k1.to_string()), &v1.clone());
                 if k1.eq("id_like") {
                     if v1.find("rhel").is_some() {
-                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("EL"));
+                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Fedora"));
+                    } else if v1.find("fedora").is_some() {
+                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Fedora"))
                     } else if v1.find("debian").is_some() {
                         self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Debian"))
                     } else if v1.find("arch").is_some() {
                         self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Arch"))
+                    } else if v1.find("suse").is_some() {
+                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Suse"))
                     }
                 }
                 // if /etc/os-release does not have ID_LIKE line, like Archlinux
                 if k1.eq("id") {
                     if v1.find("arch").is_some() {
                         self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Arch"));
+                    } else if v1.find("fedora").is_some() {
+                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Fedora"));
+                    } else if v1.find("debian").is_some() {
+                        self.insert_string(mapping, &String::from("jet_os_flavor"), &String::from("Debian"));
                     }
                 }
             }
