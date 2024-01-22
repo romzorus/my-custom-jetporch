@@ -5,30 +5,50 @@ use testinglib::*;
 
 
 #[test]
-fn test_module_file() -> Result<(), Box<dyn std::error::Error>> {
+fn test_module_copy_file_directory_stat() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
     docker_init("containers-list-mod-file.json", "file");
     create_inventory(&tempfolder, "containers-list-mod-file.json");
 
+    // Create a directory on the remote host, copy a localhost file into the remote directory,
+    // get the remote file's information then delete it
     let playbookcontent =
-r#"---
-- name: file module testing
-  groups:
-    - all
-  tasks:
-    - !file
-      path: /root/myfile
-      attributes:
-        owner: root
-        group: root
-        mode: 0o777
-
-    - !file
-      path: /root/myfile
-      remove: true
-"#;
+    r#"---
+    - name: file module testing
+      groups:
+        - all
+    
+      tasks:
+        - !directory
+          path: /tmp/workdir
+          attributes:
+            owner: root
+            group: root
+            mode: 0o777
+    
+        - !copy
+          src: /etc/hostname
+          dest: /tmp/workdir/hostname
+          attributes:
+            owner: root
+            group: root
+            mode: 0o777
+        
+        - !stat
+          path: /tmp/workdir/hostname
+          save: stat_result
+    
+        - !debug
+          vars:
+          - stat_result
+    
+        - !file
+          path: /tmp/workdir/hostname
+          remove: true
+    
+    "#;
 
     create_playbook(&tempfolder, playbookcontent);
     
