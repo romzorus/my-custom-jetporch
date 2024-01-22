@@ -31,8 +31,8 @@ pub struct AssertTask {
     pub all_true: Option<Vec<String>>,
     pub all_false: Option<Vec<String>>,
     pub some_true: Option<Vec<String>>,
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>
 }
 
 #[allow(dead_code)]
@@ -51,7 +51,7 @@ impl IsTask for AssertTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         return Ok(
@@ -68,20 +68,20 @@ impl IsTask for AssertTask {
                             false => false
                     },
                     all_true: match self.all_true.is_some() {
-                        true => eval_list(handle, request, tm, self.all_true.as_ref().unwrap())?,
+                        true => eval_list(handle, request, tm, &self.all_true.as_ref().unwrap())?,
                         false => vec![true]
                     },
                     all_false: match self.all_false.is_some() {
-                        true => eval_list(handle, request, tm, self.all_false.as_ref().unwrap())?,
+                        true => eval_list(handle, request, tm, &self.all_false.as_ref().unwrap())?,
                         false => vec![false]
                     },
                     some_true: match self.some_true.is_some() {
-                        true => eval_list(handle, request, tm, self.some_true.as_ref().unwrap())?,
+                        true => eval_list(handle, request, tm, &self.some_true.as_ref().unwrap())?,
                         false => vec![true]
                     }
                 }),
-                with: Arc::new(PreLogicInput::template(handle, request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(handle, request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(handle, request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(handle, request, tm, &self.aftertask)?),
             }
         );
     }

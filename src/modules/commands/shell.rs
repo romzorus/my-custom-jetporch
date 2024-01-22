@@ -33,8 +33,8 @@ pub struct ShellTask {
     pub changed_when: Option<String>, 
     #[serde(rename = "unsafe")]
     pub unsafe_: Option<String>, /* FIXME: can use r#unsafe instead */
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>,
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>,
 }
 struct ShellAction {
     pub cmd: String,
@@ -49,7 +49,7 @@ impl IsTask for ShellTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         return Ok(
@@ -70,8 +70,8 @@ impl IsTask for ShellTask {
                     changed_when: handle.template.string_option_unsafe_for_shell(&request, tm, &String::from("changed_when"), &self.changed_when)?,
 
                 }),
-                with: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.aftertask)?),
             }
         );
     }

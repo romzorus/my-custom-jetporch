@@ -32,8 +32,8 @@ pub struct DirectoryTask {
     pub remove: Option<String>,
     pub recurse: Option<String>,
     pub attributes: Option<FileAttributesInput>,
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>
 }
 struct DirectoryAction {
     pub path: String,
@@ -46,7 +46,7 @@ impl IsTask for DirectoryTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         let recurse = match handle.template.boolean_option_default_false(&request, tm, &String::from("recurse"), &self.recurse)? {
@@ -61,8 +61,8 @@ impl IsTask for DirectoryTask {
                     path:       handle.template.path(&request, tm, &String::from("path"), &self.path)?,
                     attributes: FileAttributesInput::template(&handle, &request, tm, &self.attributes)?
                 }),
-                with: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.aftertask)?),
             }
         );
     }

@@ -58,8 +58,8 @@ impl Response {
             changes: Vec::new(), 
             msg: Some(msg.clone()), 
             command_result: Arc::new(None), 
-            with: Arc::new(None), 
-            and: Arc::new(None)
+            beforetask: Arc::new(None), 
+            aftertask: Arc::new(None)
         });
     }
 
@@ -77,8 +77,8 @@ impl Response {
             changes: Vec::new(), 
             msg: Some(String::from("command failed")), 
             command_result: Arc::clone(&result), 
-            with: Arc::new(None), 
-            and: Arc::new(None)
+            beforetask: Arc::new(None), 
+            aftertask: Arc::new(None)
         });
     }
 
@@ -87,7 +87,7 @@ impl Response {
         self.get_visitor().read().expect("read visitor").on_command_ok(&self.get_context(), &Arc::clone(&self.host), &Arc::clone(result));
         return Arc::new(TaskResponse {
             status: TaskStatus::IsExecuted,
-            changes: Vec::new(), msg: None, command_result: Arc::clone(&result), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::clone(&result), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -96,7 +96,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Validate, "is_skipped response can only be returned for a validation request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsSkipped, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -107,7 +107,7 @@ impl Response {
             "is_matched response can only be returned for a query request, was {:?}", request.request_type);
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsMatched, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -116,7 +116,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Create, "is_executed response can only be returned for a creation request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsCreated, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
     
@@ -126,7 +126,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Execute, "is_executed response can only be returned for a creation request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsExecuted, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
     
@@ -136,7 +136,7 @@ impl Response {
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsRemoved, 
             changes: Vec::new(), 
-            msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -145,7 +145,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Passive || request.request_type == TaskRequestType::Execute, "is_passive response can only be returned for a passive or execute request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsPassive, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
     
@@ -155,7 +155,7 @@ impl Response {
         return Arc::new(TaskResponse { 
             status: TaskStatus::IsModified, 
             changes: changes, 
-            msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -164,7 +164,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Query, "needs_creation response can only be returned for a query request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::NeedsCreation, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None), 
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None), 
         });
     }
     
@@ -175,7 +175,7 @@ impl Response {
         return Arc::new(TaskResponse { 
             status: TaskStatus::NeedsModification, 
             changes: changes.clone(), 
-            msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None) 
+            msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None) 
         });
     }
     
@@ -184,7 +184,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Query, "needs_removal response can only be returned for a query request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::NeedsRemoval, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 
@@ -194,7 +194,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Query, "needs_execution response can only be returned for a query request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::NeedsExecution, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None),and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None),aftertask: Arc::new(None)
         });
     }
     
@@ -203,7 +203,7 @@ impl Response {
         assert!(request.request_type == TaskRequestType::Query, "needs_passive response can only be returned for a query request");
         return Arc::new(TaskResponse { 
             status: TaskStatus::NeedsPassive, 
-            changes: Vec::new(), msg: None, command_result: Arc::new(None), with: Arc::new(None), and: Arc::new(None)
+            changes: Vec::new(), msg: None, command_result: Arc::new(None), beforetask: Arc::new(None), aftertask: Arc::new(None)
         });
     }
 

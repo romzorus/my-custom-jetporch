@@ -41,8 +41,8 @@ pub struct UserTask {
     pub shell:             Option<String>,
     pub remove:            Option<String>,
     pub cleanup:           Option<String>,
-    pub with:              Option<PreLogicInput>,
-    pub and:               Option<PostLogicInput>
+    pub beforetask:              Option<PreLogicInput>,
+    pub aftertask:               Option<PostLogicInput>
 }
 
 struct UserAction {
@@ -73,7 +73,7 @@ impl IsTask for UserTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
 
@@ -104,8 +104,8 @@ impl IsTask for UserTask {
                     remove:            handle.template.boolean_option_default_false(&request, tm, &String::from("remove"), &self.remove)?,
                     cleanup:           handle.template.boolean_option_default_false(&request, tm, &String::from("cleanup"), &self.cleanup)?,
                 }),
-                with: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.aftertask)?),
             }
         );
     }

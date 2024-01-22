@@ -20,19 +20,19 @@
    - !echo
      name: "looping over a basic list: uno, dos, tres!"
      msg: "{{ item }}"
-     with:
+     beforetask:
         items: a_list
 
    - !echo
      name: "looping over a structured list"
      msg: "a={{ item.a }} b={{ item.b}}"
-     with:
+     beforetask:
          items: b_list   
 
    - !echo
      name: "this time the list is not from a variable"
      msg: "{{ item }}"
-     with:
+     beforetask:
         items:
            - "{{ narf }}"
            - asdf
@@ -41,7 +41,7 @@
    - !echo
      name: "this time with a list of dicts"
      msg: "{{ item.a }}, {{ item.b }}"
-     with:
+     beforetask:
         items:
            - { a: "a", b: "b" }
            - { a: "c", b: "d" }

@@ -48,8 +48,8 @@ pub struct TaskResponse {
     pub changes: Vec<Field>,
     pub msg: Option<String>,
     pub command_result: Arc<Option<CommandResult>>,
-    pub with: Arc<Option<PreLogicEvaluated>>,
-    pub and: Arc<Option<PostLogicEvaluated>>
+    pub beforetask: Arc<Option<PreLogicEvaluated>>,
+    pub aftertask: Arc<Option<PostLogicEvaluated>>
 }
 
 //impl TaskResponse {

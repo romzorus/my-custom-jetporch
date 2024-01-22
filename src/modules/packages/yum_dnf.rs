@@ -31,8 +31,8 @@ pub struct YumDnfTask {
     pub version: Option<String>,
     pub update: Option<String>,
     pub remove: Option<String>,
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>
 }
 
 struct YumDnfAction {
@@ -46,7 +46,7 @@ impl IsTask for YumDnfTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         return Ok(
@@ -57,8 +57,8 @@ impl IsTask for YumDnfTask {
                     update:     handle.template.boolean_option_default_false(&request, tm, &String::from("update"), &self.update)?,
                     remove:     handle.template.boolean_option_default_false(&request, tm, &String::from("remove"), &self.remove)?
                 }),
-                with: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.aftertask)?),
             }
         );
     }

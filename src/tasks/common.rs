@@ -23,8 +23,8 @@ use crate::tasks::TemplateMode;
 
 pub struct EvaluatedTask {
     pub action: Arc<dyn IsAction>,
-    pub with: Arc<Option<PreLogicEvaluated>>,
-    pub and: Arc<Option<PostLogicEvaluated>>
+    pub beforetask: Arc<Option<PreLogicEvaluated>>,
+    pub aftertask: Arc<Option<PostLogicEvaluated>>
 }
 
 pub trait IsTask : Send + Sync { 

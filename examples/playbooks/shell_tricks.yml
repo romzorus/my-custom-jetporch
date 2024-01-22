@@ -21,11 +21,11 @@
      
   - !echo
     msg: "the motd mentioned chickens"
-    with:
+    beforetask:
         condition: (eq grep_result.rc 0)
         
   - !echo
     msg: "the motd did not mention chickens"
-    with:
+    beforetask:
         condition: (eq grep_result.rc 1) 
         

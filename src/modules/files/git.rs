@@ -36,8 +36,8 @@ pub struct GitTask {
     pub accept_keys: Option<String>,
     pub update: Option<String>,
     pub attributes: Option<FileAttributesInput>,
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>
 }
 
 struct GitAction {
@@ -54,7 +54,7 @@ impl IsTask for GitTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         return Ok(
@@ -80,8 +80,8 @@ impl IsTask for GitTask {
                         options
                     }
                 }),
-                with: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(&handle, &request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(&handle, &request, tm, &self.aftertask)?),
             }
         );
     }

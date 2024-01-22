@@ -95,8 +95,8 @@ fn get_actual_connection(run_state: &Arc<RunState>, host: &Arc<RwLock<Host>>, ta
 
     return match task.get_with() {
         
-        // if the task has a with section then the task might be delegated
-        Some(task_with) => match task_with.delegate_to {
+        // if the task has a beforetask section then the task might be delegated
+        Some(task_beforetask) => match task_beforetask.delegate_to {
 
             // we have found the delegate_to keyword
             Some(pre_delegate) => {
@@ -186,8 +186,8 @@ fn run_task_on_host(
     // but allows us to get the 'items' data off the collection. 
     let evaluated = task.evaluate(&handle, &validate, TemplateMode::Off)?;
 
-    if evaluated.with.is_some() {
-        let condition = &evaluated.with.as_ref().as_ref().unwrap().condition; // lol rust
+    if evaluated.beforetask.is_some() {
+        let condition = &evaluated.beforetask.as_ref().as_ref().unwrap().condition; // lol rust
         if condition.is_some() {
             let cond = handle.template.test_condition(&validate, TemplateMode::Strict, &condition.as_ref().unwrap())?;
             if ! cond {
@@ -197,8 +197,8 @@ fn run_task_on_host(
     }
 
     // see if we are iterating over a list of items or not
-    let items_input = match evaluated.with.is_some() {
-        true => &evaluated.with.as_ref().as_ref().unwrap().items,
+    let items_input = match evaluated.beforetask.is_some() {
+        true => &evaluated.beforetask.as_ref().as_ref().unwrap().items,
         false => &None
     };
 
@@ -223,11 +223,11 @@ fn run_task_on_host(
         let evaluated = task.evaluate(&handle, &validate, TemplateMode::Strict)?;
 
         // see if there is any retry or delay logic in the task
-        let mut retries = match evaluated.and.as_ref().is_some() {
-            false => 0, true => evaluated.and.as_ref().as_ref().unwrap().retry
+        let mut retries = match evaluated.aftertask.as_ref().is_some() {
+            false => 0, true => evaluated.aftertask.as_ref().as_ref().unwrap().retry
         };
-            let delay = match evaluated.and.as_ref().is_some() {
-            false => 1, true => evaluated.and.as_ref().as_ref().unwrap().delay
+            let delay = match evaluated.aftertask.as_ref().is_some() {
+            false => 1, true => evaluated.aftertask.as_ref().as_ref().unwrap().delay
         };
     
         // run the task as many times as defined by retry logic
@@ -283,8 +283,8 @@ fn run_task_on_host_inner(
 
     // access any pre and post-task modifier logic
     let action = &evaluated.action;
-    let pre_logic = &evaluated.with;
-    let post_logic = &evaluated.and;
+    let pre_logic = &evaluated.beforetask;
+    let post_logic = &evaluated.aftertask;
 
     // get the sudo settings from the play if available, if not see if they were set from the CLI
     let mut sudo : Option<String> = match play.sudo.is_some() {

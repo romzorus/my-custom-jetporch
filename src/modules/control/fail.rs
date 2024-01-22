@@ -26,8 +26,8 @@ const MODULE: &str = "fail";
 pub struct FailTask {
     pub name: Option<String>,
     pub msg: Option<String>,
-    pub with: Option<PreLogicInput>,
-    pub and: Option<PostLogicInput>
+    pub beforetask: Option<PreLogicInput>,
+    pub aftertask: Option<PostLogicInput>
 }
 
 #[allow(dead_code)]
@@ -40,7 +40,7 @@ impl IsTask for FailTask {
 
     fn get_module(&self) -> String { String::from(MODULE) }
     fn get_name(&self) -> Option<String> { self.name.clone() }
-    fn get_with(&self) -> Option<PreLogicInput> { self.with.clone() }
+    fn get_with(&self) -> Option<PreLogicInput> { self.beforetask.clone() }
 
     fn evaluate(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, tm: TemplateMode) -> Result<EvaluatedTask, Arc<TaskResponse>> {
         return Ok(
@@ -49,8 +49,8 @@ impl IsTask for FailTask {
                     name: self.name.clone().unwrap_or(String::from(MODULE)),
                     msg:  handle.template.string_option_unsafe_for_shell(request, tm, &String::from("msg"), &self.msg)?,
                 }),
-                with: Arc::new(PreLogicInput::template(handle, request, tm, &self.with)?),
-                and: Arc::new(PostLogicInput::template(handle, request, tm, &self.and)?),
+                beforetask: Arc::new(PreLogicInput::template(handle, request, tm, &self.beforetask)?),
+                aftertask: Arc::new(PostLogicInput::template(handle, request, tm, &self.aftertask)?),
             }
         );
     }

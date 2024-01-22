@@ -71,22 +71,22 @@ r#"---
 
     - !apt
       package: git
-      with:
+      beforetask:
         condition: (eq jet_os_flavor "Debian")
     
     - !dnf
       package: git
-      with:
+      beforetask:
         condition: (eq jet_os_flavor "Fedora")
     
     - !pacman
       package: git
-      with:
+      beforetask:
         condition: (eq jet_os_flavor "Arch")
     
     - !zypper
       package: git
-      with:
+      beforetask:
         condition: (eq jet_os_flavor "Suse")
 
     - !git

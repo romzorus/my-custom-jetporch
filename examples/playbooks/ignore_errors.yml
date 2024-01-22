@@ -9,7 +9,7 @@
 
   - !fail
     name: this will not fail
-    and:
+    aftertask:
         ignore_errors: true
 
   - !fail

@@ -18,7 +18,7 @@
 
   - !shell
     cmd: cat '{{ test_file }}'
-    and:
+    aftertask:
        retry: 100
        delay: 10
 
