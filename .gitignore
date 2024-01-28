@@ -1,2 +1,5 @@
 /src/cli/version.rs
 target
+Cargo.lock
+tests/controller_key
+tests/controller_key.pub
