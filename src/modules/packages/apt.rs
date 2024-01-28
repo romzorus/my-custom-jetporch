@@ -144,6 +144,9 @@ impl PackageManagementModule for AptAction {
     }
 
     fn install_package(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+        let cmd_update = String::from("apt-get update");
+        let _cacheupdate = handle.remote.run(request, &cmd_update, CheckRc::Checked);
+
         let cmd = match self.version.is_none() {
             true => format!("DEBIAN_FRONTEND=noninteractive apt-get install '{}' -qq", self.package),
             false => format!("DEBIAN_FRONTEND=noninteractive apt-get install '{}={}' -qq", self.package, self.version.as_ref().unwrap())
@@ -152,6 +155,9 @@ impl PackageManagementModule for AptAction {
     }
 
     fn update_package(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+        let cmd_update = String::from("apt-get update");
+        let _cacheupdate = handle.remote.run(request, &cmd_update, CheckRc::Checked);
+        
         let cmd = match self.version.is_none() {
             true => format!("DEBIAN_FRONTEND=noninteractive apt-get install '{}' --only-upgrade -qq", self.package),
             false => format!("DEBIAN_FRONTEND=noninteractive apt-get install '{}={}' --only-upgrade -qq", self.package, self.version.as_ref().unwrap())
