@@ -92,22 +92,22 @@ r#"---
     - !apt
       package: git
       beforetask:
-        condition: (eq jet_os_flavor "Debian")
+        checkcondition: (eq jet_os_flavor "Debian")
     
     - !dnf
       package: git
       beforetask:
-        condition: (eq jet_os_flavor "Fedora")
+        checkcondition: (eq jet_os_flavor "Fedora")
     
     - !pacman
       package: git
       beforetask:
-        condition: (eq jet_os_flavor "Arch")
+        checkcondition: (eq jet_os_flavor "Arch")
     
     - !zypper
       package: git
       beforetask:
-        condition: (eq jet_os_flavor "Suse")
+        checkcondition: (eq jet_os_flavor "Suse")  
 
     - !git
       repo: https://github.com/romzorus/my-custom-jetporch.git

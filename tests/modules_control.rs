@@ -27,22 +27,22 @@ fn test_module_echo_facts_debug() -> Result<(), Box<dyn std::error::Error>> {
         - !echo
           msg: "This OS if Debian flavored."
           beforetask:
-            condition: (eq jet_os_flavor "Debian")
+            checkcondition: (eq jet_os_flavor "Debian")
       
         - !echo
           msg: "This OS if Fedora flavored."
           beforetask:
-            condition: (eq jet_os_flavor "Fedora")
+            checkcondition: (eq jet_os_flavor "Fedora")
         
         - !echo
           msg: "This OS if Arch flavored."
           beforetask:
-            condition: (eq jet_os_flavor "Arch")
+            checkcondition: (eq jet_os_flavor "Arch")
         
         - !echo
           msg: "This OS if Suse flavored."
           beforetask:
-            condition: (eq jet_os_flavor "Suse")
+            checkcondition: (eq jet_os_flavor "Suse")
       
         - !debug
     

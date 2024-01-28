@@ -28,7 +28,7 @@ use crate::playbooks::templar::TemplateMode;
 #[derive(Deserialize,Debug,Clone)]
 #[serde(deny_unknown_fields)]
 pub struct PreLogicInput {
-    pub condition: Option<String>,
+    pub checkcondition: Option<String>,
     pub subscribe: Option<String>,
     pub sudo: Option<String>,
     pub items: Option<ItemsInput>,
@@ -45,7 +45,7 @@ pub enum ItemsInput {
 
 #[derive(Debug)]
 pub struct PreLogicEvaluated {
-    pub condition: Option<String>, // this is not evaluated here
+    pub checkcondition: Option<String>, // this is not evaluated here
     pub subscribe: Option<String>,
     pub sudo: Option<String>,
     pub items: Option<ItemsInput>,
@@ -78,7 +78,7 @@ impl PreLogicInput {
         }
         let input2 = input.as_ref().unwrap();
         return Ok(Some(PreLogicEvaluated {
-            condition: input2.condition.clone(),
+            checkcondition: input2.checkcondition.clone(),
             sudo: handle.template.string_option_no_spaces(request, tm, &String::from("sudo"), &input2.sudo)?,
             subscribe: handle.template.no_template_string_option_trim(&input2.subscribe),
             items: input2.items.clone(),

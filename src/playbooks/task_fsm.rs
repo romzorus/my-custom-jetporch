@@ -187,9 +187,9 @@ fn run_task_on_host(
     let evaluated = task.evaluate(&handle, &validate, TemplateMode::Off)?;
 
     if evaluated.beforetask.is_some() {
-        let condition = &evaluated.beforetask.as_ref().as_ref().unwrap().condition; // lol rust
-        if condition.is_some() {
-            let cond = handle.template.test_condition(&validate, TemplateMode::Strict, &condition.as_ref().unwrap())?;
+        let checkcondition = &evaluated.beforetask.as_ref().as_ref().unwrap().checkcondition; // lol rust
+        if checkcondition.is_some() {
+            let cond = handle.template.test_condition(&validate, TemplateMode::Strict, &checkcondition.as_ref().unwrap())?;
             if ! cond {
                 return Ok(handle.response.is_skipped(&Arc::clone(&validate)));
             }
