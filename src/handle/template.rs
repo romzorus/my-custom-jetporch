@@ -375,7 +375,7 @@ impl Template {
     }
 
     pub fn find_file_path(&self, request: &Arc<TaskRequest>, tm: TemplateMode, field: &String, str_path: &String) -> Result<PathBuf, Arc<TaskResponse>> {
-        // simialr to find_template_path, this one assumes a 'files/' directory for relative paths.
+        // similar to find_template_path, this one assumes a 'files/' directory for relative paths.
         return self.find_sub_path(&String::from("files"), request, tm, field, str_path);
     }
 

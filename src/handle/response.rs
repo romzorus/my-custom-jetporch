@@ -101,7 +101,7 @@ impl Response {
     }
 
     pub fn is_matched(&self, request: &Arc<TaskRequest>, ) -> Arc<TaskResponse> {
-        // returned by a query function when the resource is matched exactly and no operations are neccessary to 
+        // returned by a query function when the resource is matched exactly and no operations are necessary to 
         // run to configure the remote
         assert!(request.request_type == TaskRequestType::Query || request.request_type == TaskRequestType::Validate,  
             "is_matched response can only be returned for a query request, was {:?}", request.request_type);
