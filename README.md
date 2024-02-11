@@ -1,18 +1,18 @@
 # Evolutions so far
 ## Already done
-* Focus on integration tests
+* Testing (see below part *Testing the app with Docker*)
     - Unit tests added for `src/cli/show.rs`
     - Automated integration tests on a Docker lab : integration tests are made, through ssh, on Docker containers based on the main Linux distributions :
         - CLI modes : UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
         - Modules : shell, git, file, directory, copy, stat
 
 ## In progress
-* Still focusing on tests : *once we have a strong set of automated tests, we can begin to add/improve functionalities and modules while making sure this doesn't break the rest.*
-    ** creating integration tests for a maximum of modules
+- Modules :
+    - fetch : fetches a file from a controlled node to the local machine
 
 
 ## Plans for the future
-* Writing modules : archive, extract, fetch, script, firewall
+* Writing modules : archive, extract, script, firewall
 
 # Testing the app with Docker
 
