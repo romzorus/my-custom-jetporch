@@ -46,6 +46,7 @@ use crate::modules::control::set::SetTask;
 use crate::modules::files::copy::CopyTask;
 use crate::modules::files::directory::DirectoryTask;
 use crate::modules::files::file::FileTask;
+use crate::modules::files::fetch::FetchTask;
 use crate::modules::files::git::GitTask;
 use crate::modules::files::stat::StatTask;
 use crate::modules::files::template::TemplateTask;
@@ -75,6 +76,7 @@ pub enum Task {
     External(ExternalTask),
     Facts(FactsTask),
     Fail(FailTask),
+    Fetch(FetchTask),
     File(FileTask),
     Git(GitTask),
     Group(GroupTask),
@@ -104,7 +106,8 @@ impl Task {
             Task::Echo(x)       => x.get_module(),
             Task::External(x)   => x.get_module(),
             Task::Facts(x)      => x.get_module(), 
-            Task::Fail(x)       => x.get_module(), 
+            Task::Fail(x)       => x.get_module(),
+            Task::Fetch(x)      => x.get_module(), 
             Task::File(x)       => x.get_module(),
             Task::Git(x)        => x.get_module(), 
             Task::Group(x)      => x.get_module(),
@@ -134,6 +137,7 @@ impl Task {
             Task::External(x)   => x.get_name(),
             Task::Facts(x)      => x.get_name(),
             Task::Fail(x)       => x.get_name(), 
+            Task::Fetch(x)      => x.get_name(),
             Task::File(x)       => x.get_name(), 
             Task::Git(x)        => x.get_name(),
             Task::Group(x)      => x.get_name(),
@@ -163,6 +167,7 @@ impl Task {
             Task::External(x)   => x.get_with(),
             Task::Facts(x)      => x.get_with(),
             Task::Fail(x)       => x.get_with(), 
+            Task::Fetch(x)      => x.get_with(),
             Task::File(x)       => x.get_with(),
             Task::Git(x)        => x.get_with(), 
             Task::Group(x)      => x.get_with(),
@@ -192,6 +197,7 @@ impl Task {
             Task::External(x)   => x.evaluate(handle, request, tm),
             Task::Facts(x)      => x.evaluate(handle, request, tm),
             Task::Fail(x)       => x.evaluate(handle, request, tm),  
+            Task::Fetch(x)      => x.evaluate(handle, request, tm),
             Task::File(x)       => x.evaluate(handle, request, tm), 
             Task::Git(x)        => x.evaluate(handle, request, tm),
             Task::Group(x)      => x.evaluate(handle, request, tm),

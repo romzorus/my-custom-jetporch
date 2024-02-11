@@ -30,7 +30,7 @@ use std::sync::{Arc,Mutex,RwLock};
 use ssh2::Session;
 use std::io::{Read,Write};
 use std::net::TcpStream;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::net::ToSocketAddrs;
 use std::fs::File;
@@ -362,6 +362,38 @@ impl Connection for SshConnection {
         match io::copy(&mut src2, &mut fh2) {
             Ok(_) => {},
             Err(y) => { return Err(response.is_failed(request, &format!("sftp copy failed (1): {y}"))) }
+        };
+
+        return Ok(());
+    }
+
+    fn fetch_file(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>> {
+
+        let session = self.session.as_ref().expect("session not established");
+        let sftp_result = session.sftp();
+        let sftp = match sftp_result {
+            Ok(x) => x,
+            Err(y) => { return Err(response.is_failed(request, &format!("sftp connection failed: {y}"))); }
+        };
+        let sftp_path = Path::new(&remote_src);
+        let fh_result = sftp.open(sftp_path);
+        let src_file = match fh_result {
+            Ok(x) => x,
+            Err(y) => { return Err(response.is_failed(request, &format!("sftp open failed : {y}"))) }
+        };
+
+        let dest_create_result = File::create(local_dest);
+        let dest_file = match dest_create_result {
+            Ok(x) => x,
+            Err(y) => { return Err(response.is_failed(request, &format!("failed to create local destination file: {y}"))); }
+        };
+
+        let mut src_file_reader = std::io::BufReader::with_capacity(1000000, src_file);
+        let mut dest_file_writer = std::io::BufWriter::with_capacity(1000000, dest_file);
+
+        match io::copy(&mut src_file_reader, &mut dest_file_writer) {
+            Ok(_) => {},
+            Err(y) => { return Err(response.is_failed(request, &format!("sftp fetch failed : {y}"))) }
         };
 
         return Ok(());

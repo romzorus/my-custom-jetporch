@@ -18,6 +18,7 @@
 
 pub mod copy;
 pub mod directory;
+pub mod fetch;
 pub mod file;
 pub mod git;
 pub mod stat;

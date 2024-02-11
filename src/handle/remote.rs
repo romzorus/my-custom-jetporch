@@ -245,6 +245,14 @@ impl Remote {
         return Ok(xfer_result);
     }
 
+    // fetches a file from a remote location
+
+    pub fn fetch_file(&self, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>>
+    {
+        let _ = self.connection.lock().unwrap().fetch_file(&self.response, request, remote_src, local_dest);
+        return Ok(());
+    }
+
     // gets the octal string mode of a remote file
 
     pub fn get_mode(&self, request: &Arc<TaskRequest>, path: &String) -> Result<Option<String>,Arc<TaskResponse>> {

@@ -31,7 +31,7 @@ use std::process::Command;
 use crate::Inventory;
 use crate::util::io::jet_file_open;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::Write;
 use std::env;
 
@@ -144,6 +144,11 @@ impl Connection for LocalConnection {
             Ok(_x) => Ok(()),
             Err(e) => { return Err(response.is_failed(&request, &format!("copy failed: {:?}", e))) }
         }
+    }
+
+    fn fetch_file(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>> {
+        // To be completed : fetch_file() in local mode is just copying
+        Ok(())
     }
 
     fn write_data(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, data: &String, remote_path: &String) -> Result<(),Arc<TaskResponse>> {

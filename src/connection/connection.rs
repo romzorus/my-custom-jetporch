@@ -19,7 +19,7 @@ use crate::tasks::response::TaskResponse;
 use crate::handle::response::Response;
 use std::sync::Arc;
 use std::marker::{Send,Sync};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::connection::command::Forward;
 
 // the connection trait that serves as the base for SshConnection, LocalConnection, and NoConnection
@@ -33,6 +33,8 @@ pub trait Connection : Send + Sync {
     fn write_data(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, data: &String, remote_path: &String) -> Result<(),Arc<TaskResponse>>;
 
     fn copy_file(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, src: &Path, dest: &String) -> Result<(), Arc<TaskResponse>>;
+
+    fn fetch_file(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>>;
 
     fn whoami(&self) -> Result<String,String>;
 

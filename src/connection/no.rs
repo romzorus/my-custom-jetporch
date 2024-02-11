@@ -26,7 +26,7 @@ use crate::connection::command::Forward;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::RwLock;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // the noconnection and nofactory are not really used in normal execution of jet, but are around in the "__simulate" hidden
 // suboption, as this is occasionally useful for testing certain jet internals.  This is not meant for serious work.
@@ -88,5 +88,10 @@ impl Connection for NoConnection {
        // no data is transferred, as per above
        return Ok(());
    }
+
+   fn fetch_file(&self, _response: &Arc<Response>, _request: &Arc<TaskRequest>, _remote_src: &String, _local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>> {
+        // again, no data is transferred, as per above
+        return Ok(());
+}
 
 }
