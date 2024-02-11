@@ -2,9 +2,9 @@
 ## Already done
 * Testing (see below part *Testing the app with Docker*)
     - Unit tests added for `src/cli/show.rs`
-    - Automated integration tests on a Docker lab : integration tests are made, through ssh, on Docker containers based on the main Linux distributions :
+    - Automated integration tests for :
         - CLI modes : UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
-        - Modules : shell, git, file, directory, copy, stat
+        - Modules : shell, git, file, directory, copy, stat, fetch
 
 ## In progress
 - Modules :
