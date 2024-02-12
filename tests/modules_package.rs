@@ -9,7 +9,7 @@ fn test_module_packages() -> Result<(), Box<dyn std::error::Error>> {
     // Creating a temporary folder to work in
     let tempfolder = TempDir::new()?;
 
-    docker_init("containers-list-mod-packages.json", "git");
+    docker_init("containers-list-mod-packages.json", "packages");
     create_inventory(&tempfolder, "containers-list-mod-packages.json");
 
     // First we get facts then we install git. After that we clone a repo and list its files.
