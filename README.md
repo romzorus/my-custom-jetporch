@@ -1,18 +1,64 @@
-# Evolutions so far
-## Already done
-* Testing (see below part *Testing the app with Docker*)
-    - Unit tests added for `src/cli/show.rs`
-    - Automated integration tests for :
-        - CLI modes : UNSET, SHOW-INVENTORY, LOCAL, CHECK-LOCAL, SSH, and CHECK-SSH
-        - Modules : shell, git, file, directory, copy, stat, fetch
+# Ansible in Rust : jetp
 
-## In progress
-- Modules :
-    - fetch : fetches a file from a controlled node to the local machine
+This project is a fork of the [jetporch](https://github.com/jetporch/jetporch) project.
 
+**Feel free to send comments/requests/contributions if you feel like it !**
 
-## Plans for the future
-* Writing modules : archive, extract, script, firewall
+# Core modules
+
+These modules are included in the jet binary. They can be used directly.
+
+### access
+| Module | Status | Description |
+|------|-------|-------------|
+| `group` | (TBC) | Manage groups on the remote host |
+| `user` | (TBC) | Manage users on the remote host |
+
+### commands
+| Module | Status | Description |
+|------|-------|-------------|
+| `external` | (TBC) | Use an external module written in Python |
+| `script` | (TBD) | Push and execute a custom script on the remote host |
+| `shell` | ready | Execute a custom command on the remote host |
+
+### control
+| Module | Status | Description |
+|------|-------|-------------|
+| `assert` | ready | Test a condition and make the playbook fail in case of false return |
+| `debug` | ready | Display everything for debug purposes |
+| `echo` | ready | Display a custom message in jet output |
+| `facts` | ready | Gather facts about the remote host OS |
+| `fail` | ready | Make the playbook fail with a custom error message |
+| `set` | (TBC) | Set variables conditionally |
+
+### files
+| Module | Status | Description |
+|------|-------|-------------|
+| `archive` | (TBD) | Create and extract archives on the remote host |
+| `copy` | ready | Copy a file from the local machine to the remote host |
+| `directory` | ready | Manage directories in remote host (create, delete) |
+| `fetch` | (in progress) | Fetch a file from the remote host to the local machine |
+| `file` | ready | Manage files in remote host (create, delete) |
+| `git` | ready | Handle a git repository from the remote host (clone...etc) |
+| `stat` | ready | Retrieve the permissions of a remote file in 'chmod numbers' format |
+
+### packages
+| Module | Status | Description |
+|------|-------|-------------|
+| `apt` | ready | Manage packages in Debian-like distributions |
+| `homebrew` | (TBC) | Manage packages in OS X remote hosts |
+| `pacman` | ready | Manage packages in Arch Linux distributions |
+| `yum_dnf` | ready | Manage packages in Fedora-like distributions |
+| `zypper` | ready | Manage packages in OpenSuse distributions |
+
+### services
+| Module | Status | Description |
+|------|-------|-------------|
+| `sd_service` | (TBC) | Manage systemd services on remote host |
+
+*TBD : to be done*
+*TBC : to be checked/tested*
+
 
 # Testing the app with Docker
 
@@ -27,17 +73,7 @@ Because `cargo` runs tests in parallel, you might encounter memory issues becaus
 
 **If you have limited ressources, it is recommended to use this command : `cargo testdocker`, which is an alias for `cargo test -- --test-threads=10`. Otherwise, just run `cargo test`.**
 
-
-**Feel free to send comments and contributions if you feel like it !**
-
 # Context
+Jet is a GPLv3 licensed project, created and run by Michael DeHaan. [(<michael@michaeldehaan.net>)](mailto:michael@michaeldehaan.net).
 
 On 23th december 2023, Michael DeHaan sent a newsletter ("Discontinuing Jet") in which he announced that he has decided to not work on Jet any more. This repository has been created by me as a way to continue to explore Rust and learn from this great project, even if it doesn't lead anywhere. It was forked from [here](https://github.com/jetporch/jetporch) and renamed **my-custom-jetporch** in order to avoid confusion with the original project. Even if the basecode is 100% jetporch at the beginning, I want to make it evolve without restriction, merge branches...etc in an opinionated way, which can't be done with only a fork.
-
-# Jetporch - the Jet Enterprise Professional Orchestrator
-
-Jetporch (aka Jet) is a general-purpose, community-driven IT automation platform for configuration management, 
-deployment, orchestration, patching, and arbitrary task execution workflows. 
-
-Jet is a GPLv3 licensed project, created and run by [Michael DeHaan](https://home.laserllama.net). [(<michael@michaeldehaan.net>)](mailto:michael@michaeldehaan.net).
-
