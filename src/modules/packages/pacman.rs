@@ -109,8 +109,8 @@ impl PackageManagementModule for PacmanAction {
 
     fn install_package(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>) -> Result<Arc<TaskResponse>,Arc<TaskResponse>>{
         let cmd = match self.version.is_none() {
-            true => format!("pacman -S '{}' --noconfirm --noprogressbar --needed", self.package),
-            false => format!("pacman -S '{}={}' --noconfirm --noprogressbar --needed", self.package, self.version.as_ref().unwrap())
+            true => format!("pacman -Syu '{}' --noconfirm --noprogressbar --needed", self.package),
+            false => format!("pacman -Syu '{}={}' --noconfirm --noprogressbar --needed", self.package, self.version.as_ref().unwrap())
         };
         return handle.remote.run(request, &cmd, CheckRc::Checked);
     }
