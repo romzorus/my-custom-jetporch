@@ -6,7 +6,7 @@ This project is a fork of the [jetporch](https://github.com/jetporch/jetporch) p
 
 # Core modules
 
-These modules are included in the jet binary. They can be used directly.
+These modules are included in the jetp binary. They can be used directly.
 
 ### access
 | Module | Status | Description |
@@ -57,6 +57,7 @@ These modules are included in the jet binary. They can be used directly.
 | `sd_service` | (TBC) | Manage systemd services on remote host |
 
 *TBD : to be done*
+
 *TBC : to be checked/tested*
 
 
