@@ -72,7 +72,7 @@ Before running `cargo test`, you need to install [docker](https://docs.docker.co
 
 Because `cargo` runs tests in parallel, you might encounter memory issues because lots of containers will be running at the same time. To avoid this, you can limit the number of tests running at the same time by limiting the number of threads : `cargo test -- --test-threads=4` means you will only have a maximum of 4 sets of containers running at any given moment. The total memory required by one set of containers can vary from 15MB to 150MB or even more, depending on what you are doing with it.
 
-**If you have limited ressources, it is recommended to use this command : `cargo testdocker`, which is an alias for `cargo test -- --test-threads=10`. Otherwise, just run `cargo test`.**
+**If you have limited ressources, it is recommended to use this command : `cargo testdocker`, which is an alias for `cargo test --no-fail-fast -- --test-threads=1`. Otherwise, just run `cargo test`.**
 
 # Context
 Jet is a GPLv3 licensed project, created and run by Michael DeHaan. [(<michael@michaeldehaan.net>)](mailto:michael@michaeldehaan.net).

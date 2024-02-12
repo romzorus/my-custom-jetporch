@@ -1,2 +1,2 @@
 [alias]
-testdocker = "test -- --test-threads=10"
+testdocker = "test --no-fail-fast -- --test-threads=1"
