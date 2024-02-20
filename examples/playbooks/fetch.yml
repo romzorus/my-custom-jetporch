@@ -26,3 +26,6 @@
       mirror_mode: false # Optionnal, default = true
       remote_src: /root
       local_dest: ../root-{{ remote_hostname.out }}
+
+# mirror_mode : if a file/folder is present in the local destination folder but doesn't exist
+# in the remote source folder, it will be deleted. We want identical source and remote folders.
