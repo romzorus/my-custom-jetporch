@@ -111,6 +111,10 @@ impl Remote {
         return self.internal_run(request, cmd, Safety::Safe, check_rc, UseSudo::Yes, Forward::No);
     }
 
+    pub fn run_with_backup_cmd(&self, request: &Arc<TaskRequest>, main_cmd: &String, backup_cmd: &String, check_rc: CheckRc) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+        return self.internal_run_with_backup_cmd(request, main_cmd, backup_cmd, Safety::Safe, check_rc, UseSudo::Yes, Forward::No);
+    }
+
     pub fn run_forwardable(&self, request: &Arc<TaskRequest>, cmd: &String, check_rc: CheckRc) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
         return self.internal_run(request, cmd, Safety::Safe, check_rc, UseSudo::Yes, Forward::Yes);
     }
@@ -170,6 +174,71 @@ impl Remote {
         return result;
     }
 
+    fn internal_run_with_backup_cmd(&self, request: &Arc<TaskRequest>, main_cmd: &String, backup_cmd: &String, 
+        safe: Safety, check_rc: CheckRc, use_sudo: UseSudo, forward: Forward) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+        
+        assert!(request.request_type != TaskRequestType::Validate, "commands cannot be run in validate stage");
+
+        // apply basic screening of the entire shell command, more filtering should already be done by cmd_library
+        // for parameterized calls that use that
+               
+        if safe == Safety::Safe {
+            // check for invalid shell parameters
+            match screen_general_input_loose(&main_cmd) {
+                Ok(_x) => {},
+                Err(y) => return Err(self.response.is_failed(request, &y.clone()))
+            }
+            match screen_general_input_loose(&backup_cmd) {
+                Ok(_x) => {},
+                Err(y) => return Err(self.response.is_failed(request, &y.clone()))
+            }
+        }
+
+        // use the sudo template to choose a new command to execute if specified.
+        // this doesn't need to be sudo specifically, it's really a generic concept that can wrap a command with another tool
+
+        let main_cmd_out = match use_sudo {
+            UseSudo::Yes => match self.template.add_sudo_details(request, &main_cmd) {
+                Ok(x) => x,
+                Err(y) => { return Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))); }
+            },
+            UseSudo::No => main_cmd.clone() 
+        };
+        let backup_cmd_out = match use_sudo {
+            UseSudo::Yes => match self.template.add_sudo_details(request, &backup_cmd) {
+                Ok(x) => x,
+                Err(y) => { return Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))); }
+            },
+            UseSudo::No => backup_cmd.clone() 
+        };
+
+        self.response.get_visitor().read().expect("read visitor").on_command_run(&self.response.get_context(), &Arc::clone(&self.host), &main_cmd);
+
+        let main_result = self.connection.lock().unwrap().run_command(&self.response, request, &main_cmd_out, forward);
+
+        let main_cmd_result = main_result.as_ref().unwrap().command_result.as_ref().as_ref().unwrap();
+
+        if main_cmd_result.rc != 0 {
+
+            self.response.get_visitor().read().expect("read visitor").on_command_run(&self.response.get_context(), &Arc::clone(&self.host), &backup_cmd);
+            let backup_result = self.connection.lock().unwrap().run_command(&self.response, request, &backup_cmd_out, forward);
+
+            if check_rc == CheckRc::Checked && backup_result.is_ok(){
+                let ok_result = backup_result.as_ref().unwrap();
+                let backup_cmd_result = ok_result.command_result.as_ref().as_ref().unwrap();
+                if backup_cmd_result.rc != 0 {
+                    return Err(self.response.command_failed(request, &Arc::new(Some(backup_cmd_result.clone()))));
+                } else {
+                    return backup_result;
+                }
+            }
+
+            return Err(self.response.command_failed(request, &Arc::new(Some(main_cmd_result.clone()))));
+        }
+
+
+        return main_result;
+    }
     // the OS type of a host is set on connection by automatically running a discovery command
 
     pub fn get_os_type(&self) -> HostOSType {
@@ -249,8 +318,8 @@ impl Remote {
 
     pub fn fetch_file(&self, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>>
     {
-        let _ = self.connection.lock().unwrap().fetch_file(&self.response, request, remote_src, local_dest);
-        return Ok(());
+        // TODO : harden that part
+        self.connection.lock().unwrap().fetch_file(&self.response, request, remote_src, local_dest)
     }
 
     // gets the octal string mode of a remote file
