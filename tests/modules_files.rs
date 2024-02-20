@@ -155,13 +155,13 @@ fn test_module_fetch() -> Result<(), Box<dyn std::error::Error>> {
     // Copy the /etc/os-release file in the /root folder then fetch this folder
     // in a local folder named as the remote host hostname
     let playbookcontent = format!(
-r#"---
+"---
 - name: fetch module testing
   groups:
     - all
   tasks:
     - !shell
-      cmd: "cat /etc/hostname"
+      cmd: \"cat /etc/hostname\"
       save: remote_hostname
 
     - !shell
@@ -170,8 +170,8 @@ r#"---
     - !fetch
       is_folder: true
       remote_src: /root
-      local_dest: {}/root{{ remote_hostname.out }}
-"#, tempfolder.path().display());
+      local_dest: {}/root-{{{{ remote_hostname.out }}}}
+", tempfolder.path().display());
 
     create_playbook(&tempfolder, playbookcontent.as_str());
     
@@ -197,7 +197,7 @@ r#"---
     // Compare these numbers and exit 1 if discripency
     let checking_number_cmd = Command::new("sh")
         .arg("-c")
-        .arg(format!("EXPECTED=$(($(wc -l < {}/inventory/groups/containers) - 1)); REAL=$(find {}/root-* -type f -name \"os-release\"| wc -l); if ! [ $EXPECTED -eq $REAL ]; then echo \"Wrong number of fetched files\"; exit 1; fi"
+        .arg(format!("EXPECTED=$(($(wc -l < {}/inventory/groups/containers) - 1)); REAL=$(find {} -type f -name \"*release*\"| wc -l); if ! [ $EXPECTED -eq $REAL ]; then echo \"Wrong number of fetched files\"; exit 1; fi"
             , tempfolder.path().display()
             , tempfolder.path().display()))
         .output()
