@@ -152,7 +152,9 @@ fn test_module_fetch() -> Result<(), Box<dyn std::error::Error>> {
     docker_init("containers-list-mod-fetch.json", "fetch");
     create_inventory(&tempfolder, "containers-list-mod-fetch.json");
 
-    let playbookcontent =
+    // Copy the /etc/os-release file in the /root folder then fetch this folder
+    // in a local folder named as the remote host hostname
+    let playbookcontent = format!(
 r#"---
 - name: fetch module testing
   groups:
@@ -162,12 +164,16 @@ r#"---
       cmd: "cat /etc/hostname"
       save: remote_hostname
 
-    - !fetch
-      remote_src: /etc/os-release
-      local_dest: "../{{ remote_hostname.out }}.info"
-"#;
+    - !shell
+      cmd: cp /etc/os-release /root
 
-    create_playbook(&tempfolder, playbookcontent);
+    - !fetch
+      is_folder: true
+      remote_src: /root
+      local_dest: {}/root{{ remote_hostname.out }}
+"#, tempfolder.path().display());
+
+    create_playbook(&tempfolder, playbookcontent.as_str());
     
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
     cmd.arg("ssh")
@@ -185,15 +191,30 @@ r#"---
     // Assert that the files have been successfully fetched according to jet
     assert_eq!(output.status.success(), true);
 
-    // This command will explore each fetched file, look for 'VERSION' keyword, and exit 1 if one the files doesn't have this keyword
-    let checking_cmd = Command::new("sh")
+    // First we make sure we fetched the right number of files.
+    // Count the number of hosts in inventory (aka number of containers/Dockerfiles) -> '- 1' because the first line is 'hosts:' and not an actual host
+    // Count the number of 'os-release' files retrieved by the play
+    // Compare these numbers and exit 1 if discripency
+    let checking_number_cmd = Command::new("sh")
+        .arg("-c")
+        .arg(format!("EXPECTED=$(($(wc -l < {}/inventory/groups/containers) - 1)); REAL=$(find {}/root-* -type f -name \"os-release\"| wc -l); if ! [ $EXPECTED -eq $REAL ]; then echo \"Wrong number of fetched files\"; exit 1; fi"
+            , tempfolder.path().display()
+            , tempfolder.path().display()))
+        .output()
+        .unwrap();
+    println!("{}", String::from_utf8_lossy(&checking_number_cmd.stdout));
+    // Assert that we retrieved one 'os-release' file per container
+    assert_eq!(checking_number_cmd.status.success(), true);
+
+    // Then we explore each fetched file, look for 'VERSION' keyword, and exit 1 if one the files doesn't have this keyword.
+    let checking_content_cmd = Command::new("sh")
       .arg("-c")
-      .arg(format!("for file in {}/*.info; do if ! grep -q VERSION $file; then exit 1; else echo \"$file contains VERSION\"; fi; done", tempfolder.path().display()))
+      .arg(format!("LIST=$(find {}/root* -type f -name \"os-release\"); for file in $LIST; do if ! grep -q VERSION $file; then exit 1; else echo \"$file contains VERSION\"; fi; done", tempfolder.path().display()))
       .output()
       .unwrap();
-    println!("{}", String::from_utf8_lossy(&checking_cmd.stdout));
+    println!("{}", String::from_utf8_lossy(&checking_content_cmd.stdout));
     // Assert that all fetched files contains 'VERSION' keyword, meaning they are not empty and are likely to contain informations about the OS as expected
-    assert_eq!(checking_cmd.status.success(), true);
+    assert_eq!(checking_content_cmd.status.success(), true);
 
     docker_cleanup("containers-list-mod-fetch.json", "fetch");
 

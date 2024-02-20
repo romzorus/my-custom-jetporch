@@ -21,7 +21,7 @@ use std::vec::Vec;
 
 // KEEP THESE ALPHABETIZED
 
-#[derive(Eq,Hash,PartialEq,Clone,Copy,Debug)]
+#[derive(Eq,Hash,PartialEq,Clone,Debug)]
 pub enum Field {
     Branch,
     Content,
@@ -33,6 +33,8 @@ pub enum Field {
     Groups,
     Mode,
     Owner,
+    File(String),
+    Folder(String),
     Restart,
     Shell,
     Start,
