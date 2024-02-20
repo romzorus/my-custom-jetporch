@@ -37,7 +37,7 @@ These modules are included in the jetp binary. They can be used directly.
 | `archive` | (TBD) | Create and extract archives on the remote host |
 | `copy` | ready | Copy a file from the local machine to the remote host |
 | `directory` | ready | Manage directories in remote host (create, delete) |
-| `fetch` | (in progress) | Fetch a file from the remote host to the local machine |
+| `fetch` | ready | Fetch a file or a folder from the remote host to the local machine |
 | `file` | ready | Manage files in remote host (create, delete) |
 | `git` | ready | Handle a git repository from the remote host (clone...etc) |
 | `stat` | ready | Retrieve the permissions of a remote file in 'chmod numbers' format |
