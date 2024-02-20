@@ -1,0 +1,28 @@
+---
+- name: fetch module testing
+
+  groups:
+    - all
+  tasks:
+    - !facts
+
+# Here we just fetch a file, only if the host is 'Arch' flavored
+    - !fetch
+      remote_src: /etc/hostname
+      local_dest: /home/user/Downloads/arch-hostname
+      beforetask:
+        checkcondition: (eq jet_os_flavor "Arch")
+
+# Here we copy a file in /root then we fetch the whole folder
+    - !shell
+      cmd: "cat /etc/hostname"
+      save: remote_hostname
+
+    - !shell
+      cmd: cp /etc/os-release /root
+
+    - !fetch
+      is_folder: true # Mandatory for folders
+      mirror_mode: false # Optionnal, default = true
+      remote_src: /root
+      local_dest: ../root-{{ remote_hostname.out }}
