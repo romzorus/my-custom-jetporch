@@ -31,6 +31,7 @@ const MODULE: &str = "fetch";
 pub struct FetchTask {
     pub name: Option<String>,
     pub is_folder: Option<String>,
+    pub mirror_mode: Option<String>,
     pub remote_src: String,
     pub local_dest: String,
     pub attributes: Option<FileAttributesInput>,
@@ -40,6 +41,7 @@ pub struct FetchTask {
 
 struct FetchAction {
     pub is_folder: bool,
+    pub mirror_mode: bool,
     pub remote_src: String,
     pub local_dest: PathBuf,
 }
@@ -56,6 +58,7 @@ impl IsTask for FetchTask {
             EvaluatedTask {
                 action: Arc::new(FetchAction {
                     is_folder: handle.template.boolean_option_default_false(&request, tm, &String::from("is_folder"), &self.is_folder)?,
+                    mirror_mode: handle.template.boolean_option_default_true(&request, tm, &String::from("mirror_mode"), &self.mirror_mode)?,
                     remote_src: handle.template.string(&request, tm, &String::from("src"), &self.remote_src)?,
                     local_dest: PathBuf::from(&handle.template.path(&request, tm, &String::from("dest"), &self.local_dest)?),
                 }),
@@ -84,11 +87,17 @@ impl IsAction for FetchAction {
                         if dest_path.exists() {
                             // Both remote and local folder already exist. Comparison required
                             let mut changes: Vec<Field> = Vec::new();
+
                             // 1. Folder structure comparison
                             changes.append(&mut self.compare_folders(handle, request)?);
                             // 2. Files comparison
                             changes.append(&mut self.compare_files(handle, request)?);
-                            return Ok(handle.response.needs_modification(request, &changes));
+
+                            if changes.is_empty() {
+                                return Ok(handle.response.is_matched(request));
+                            } else {
+                                return Ok(handle.response.needs_modification(request, &changes));
+                            }
                         } else {
                             return Ok(handle.response.needs_creation(request));
                         }
@@ -114,7 +123,7 @@ impl IsAction for FetchAction {
                         let remote_512 = handle.remote.get_sha512(request, &self.remote_src)?;
                         if remote_512.eq(&local_512) {
                             // Yes it is, nothing to do then.
-                            return Ok(handle.response.is_matched(request)); 
+                            return Ok(handle.response.is_matched(request));
                         } else {
                             // No it is not so we need to get the right file.
                             return Ok(handle.response.needs_modification(request, &vec![Field::File(self.remote_src.clone())]));
@@ -131,28 +140,31 @@ impl IsAction for FetchAction {
             TaskRequestType::Create => {
 
                 if self.is_folder {
-                    let _ = self.do_create_folder_structure(handle, request);
+                    match self.do_create_folder_structure(handle, request) {
+                        Ok(_) => {
+                            return Ok(handle.response.is_created(request));
+                        }
+                        Err(e) => {
+                            return Err(handle.response.is_failed(request, &String::from("Unable to fetch the folder")));
+                        }
+                    }
                 } else {
-                    let _ = self.do_fetch_file(handle, request, &self.remote_src, None);
+                    match self.do_fetch_file(handle, request, &self.remote_src, None) {
+                        Ok(_) => {
+                            return Ok(handle.response.is_created(request));
+                        }
+                        Err(e) => {
+                            return Err(handle.response.is_failed(request, &String::from("Unable to fetch the file")));
+                        }
+                    }
                 }
 
-                return Ok(handle.response.is_created(request));
+                
             }
 
             TaskRequestType::Modify => {
                 if self.is_folder {
-                    // TBD
-                    // for change in request.changes.iter() {
-                    //     match change {
-                    //         Field::File(remote_src) => {
-                    //             self.do_fetch_file(handle, request, remote_src)?;
-                    //         }
-
-                    //         _ => {}
-                    //     }
                     let _ = self.do_apply_changes(handle, request);
-                        
-                    // }
                 } else {
                     // First we remove the local deprecated file...
                     let dest_path = Path::new(&self.local_dest);
@@ -179,8 +191,8 @@ impl FetchAction {
     // If no local_dest path is specified (None), the default behavior will be to use the local_dest field from the playbook
     pub fn do_fetch_file(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>, remote_src: &String, local_dest: Option<String>) -> Result<(), Arc<TaskResponse>> {
         match local_dest {
-            Some(local_dest) => {
-                handle.remote.fetch_file(request, remote_src, &PathBuf::from(local_dest))
+            Some(local_dest_path) => {
+                handle.remote.fetch_file(request, remote_src, &PathBuf::from(local_dest_path))
             }
             None => {
                 handle.remote.fetch_file(request, remote_src, &self.local_dest)
@@ -196,21 +208,25 @@ impl FetchAction {
         let _ = fs::create_dir_all(&self.local_dest); // TODO : add error handling here
 
         // Create the whole folder structure first
-        let cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
-        let remote_folder_list_result = handle.remote.run(request, &cmd_remote_folder_list, CheckRc::Checked);
-
-        match remote_folder_list_result {
+        let main_cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
+        let backup_cmd_remote_folder_list = format!("du -a {} | cut -f 2", self.remote_src);
+        
+        let raw_remote_folder_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
+        
+        match raw_remote_folder_list_result {
             Ok(r) => {
                 let (_rc, remote_folder_list) = cmd_info(&r);
 
                 for specific_remote_src_path in remote_folder_list.lines() {
-
-                    let _ = fs::create_dir_all(
-                        translate_path(
-                            self.remote_src.clone(), 
-                            String::from(specific_remote_src_path), 
-                            self.local_dest.display().to_string()
-                        ));
+                    // The if statement testing if the path is a directory is mandatory since the backup 'du' command lists everything (files and folders).
+                    if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
+                        let _ = fs::create_dir_all(
+                            translate_path(
+                                self.remote_src.clone(), 
+                                String::from(specific_remote_src_path), 
+                                self.local_dest.display().to_string()
+                            ));
+                    }
                 }
             }
             Err(e) => {
@@ -219,50 +235,31 @@ impl FetchAction {
         }
 
         // Then fetch the files and place them inside the local dest folder structure.
-        let cmd_remote_files_list = format!("find {} -type f", self.remote_src);
-        let remote_files_list_result = handle.remote.run(request, &cmd_remote_files_list, CheckRc::Checked);
+        let main_cmd_remote_file_list = format!("find {} -type f", self.remote_src);
+        let backup_cmd_remote_file_list = format!("du -a {} | cut -f 2", self.remote_src);
 
-        match remote_files_list_result {
+        let raw_remote_files_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
+
+        match raw_remote_files_list_result {
             Ok(r) => {
                 let (_rc, remote_files_list) = cmd_info(&r);
 
                 for remote_file_path in remote_files_list.lines() {
+                    // The if statement testing if the path is a file is mandatory since the backup 'du' command lists everything (files and folders).
+                    if handle.remote.get_is_file(request, &remote_file_path.to_string()).unwrap() {
 
-                    let local_dest_file_path = translate_path(
-                        self.remote_src.clone(), 
-                        String::from(remote_file_path), 
-                        self.local_dest.display().to_string()
-                    );
-                    let _ = handle.remote.fetch_file(
-                        request,
-                        &remote_file_path.to_string(),
-                        &PathBuf::from(local_dest_file_path)
-                    );
+                        let local_dest_file_path = translate_path(
+                            self.remote_src.clone(), 
+                            String::from(remote_file_path), 
+                            self.local_dest.display().to_string()
+                        );
+                        let _ = handle.remote.fetch_file(
+                            request,
+                            &remote_file_path.to_string(),
+                            &PathBuf::from(local_dest_file_path)
+                        );
+                    }
                 }
-
-                // for remote_file in remote_files_list.lines() {
-                //     // Does (local) destination file already exist ?
-                //     let formatted_local_dest_file_path = remote_file.replace(&formatted_remote_source_path, &formatted_local_dest_root_path);
-                //     let local_dest_file_path = PathBuf::from(formatted_local_dest_file_path);
-
-                //     if local_dest_file_path.exists() {
-                //         // Yes it already exists but...
-                //         // ... is it the same as (remote) source file ?
-                //         let local_512 = handle.local.get_sha512(request, &local_dest_file_path, true)?;
-                //         let remote_512 = handle.remote.get_sha512(request, &remote_file.to_string())?;
-                //         if remote_512.eq(&local_512) {
-                //             // Yes it is the same, nothing to do then.
-                //             continue; 
-                //         } else {
-                //             // No it is different so we need to get the right file.
-                //             handle.remote.fetch_file(request, &remote_file.to_string(), &local_dest_file_path);
-                //         }
-                //     } else {
-                //         // No the (local) destination file doesn't already exists.
-                //         // We need to fetch the remote file.
-                //         handle.remote.fetch_file(request, &remote_file.to_string(), &local_dest_file_path);
-                //     }
-                // }
 
                 return Ok(());
             }
@@ -279,15 +276,19 @@ impl FetchAction {
         let mut folders_changes: Vec<Field> = Vec::new();
 
         // First we get the remote folder structure and directly turn it into the expected local folder structure (as a Vec<String> to facilitate later comparison).
-        let cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
-        let remote_folder_list_result = handle.remote.run(request, &cmd_remote_folder_list, CheckRc::Checked);
+        let main_cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
+        let backup_cmd_remote_folder_list = format!("du -a {} | cut -f 2", self.remote_src);
+
+        let raw_folder_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
         let mut expected_local_folder_structure: Vec<String> = vec![];
 
 
-        match remote_folder_list_result {
+        match raw_folder_list_result {
             Ok(r) => {
                 let (_rc, folder_list) = cmd_info(&r);
                 for specific_remote_src_path in folder_list.lines() {
+
+                    // The if statement testing if the path is a directory is mandatory since the backup 'du' command lists everything (files and folders).
                     if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
                         expected_local_folder_structure.push(
                             translate_path(
@@ -300,30 +301,10 @@ impl FetchAction {
                 }
             }
             Err(e) => {
-                println!("Error with \'find\' command : {:?}", e); // example: 'find' not in amazonlinux docker image by default
-                println!("Trying with \'du\' command...");
-                // Something went wrong with the 'find' command on the remote machine.
-                // Trying with 'du' command.
-                let du_command = format!("du -a {} | cut -f 2", self.remote_src);
-                let du_result = handle.remote.run(request, &du_command, CheckRc::Checked);
+                println!("Error with \'find\' command ..."); // example: 'find' not in amazonlinux docker image by default
+                println!("Error with \'du\' command: {:?}", e);
 
-                match du_result {
-                    Ok(r) => {
-                        let (_rc, folder_list) = cmd_info(&r);
-                        for specific_remote_src_path in folder_list.lines() {
-
-                            expected_local_folder_structure.push(
-                                translate_path(
-                                    self.remote_src.clone(),
-                                    specific_remote_src_path.to_string(),
-                                    self.local_dest.display().to_string())
-                            );
-                        }
-                    }
-                    Err(e) => {
-                        return Err(e);
-                    }
-                }
+                return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
             }
         }
 
@@ -357,6 +338,18 @@ impl FetchAction {
             }
         }
 
+        // On the contrary, if mirror mode is activated (default), each local folder that is not present in the expected local folder structure will be added to the deletion list
+        if self.mirror_mode {
+            for local_folder in actual_local_folder_structure.iter() {
+
+                if ! expected_local_folder_structure.contains(local_folder) {
+                    folders_changes.push(
+                        Field::DelFolder(local_folder.clone())
+                    );
+                }
+            }
+        }
+
         Ok(folders_changes)
 
     }
@@ -365,16 +358,22 @@ impl FetchAction {
         let mut files_changes: Vec<Field> = Vec::new();
 
         // First we get the remote files list and directly turn it into the expected local files list (as a Vec<String> to facilitate later comparison).
-        let cmd_remote_file_list = format!("find {} -type f", self.remote_src);
-        let remote_file_list_result = handle.remote.run(request, &cmd_remote_file_list, CheckRc::Checked);
+        let main_cmd_remote_file_list = format!("find {} -type f", self.remote_src);
+        let backup_cmd_remote_file_list = format!("du -a {} | cut -f 2", self.remote_src);
+
+        let raw_remote_file_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
         let mut expected_remote_file_list: Vec<String> = vec![];
 
 
-        match remote_file_list_result {
+        match raw_remote_file_list_result {
             Ok(r) => {
-                let (_rc, file_list) = cmd_info(&r);
-                for specific_remote_src_path in file_list.lines() {
-                    expected_remote_file_list.push(specific_remote_src_path.to_string());
+                let (_rc, raw_file_list) = cmd_info(&r);
+                for specific_remote_src_path in raw_file_list.lines() {
+                    // The if statement testing if the path is a file is mandatory since the backup 'du' command lists everything (files and folders).
+                    if handle.remote.get_is_file(request, &specific_remote_src_path.to_string()).unwrap() {
+                        expected_remote_file_list.push(specific_remote_src_path.to_string());
+                    }
+                    
                 }
             }
             Err(e) => {
@@ -383,6 +382,7 @@ impl FetchAction {
         }
 
         // Then we get the actual local files list
+        // TODO: replace this with a "run_with_backup_cmd" function in case 'find' is not present locally.
         let cmd_local_file_list = Command::new("find")
                 .arg(self.local_dest.display().to_string())
                 .arg("-type")
@@ -420,10 +420,32 @@ impl FetchAction {
                 if remote_512.eq(&local_512) {
                     continue;
                 } else {
-                    files_changes.push(Field::Folder(expected_file.clone()));
+                    files_changes.push(Field::File(expected_file.clone()));
                 }
             } else {
-                files_changes.push(Field::Folder(expected_file.clone()));
+                files_changes.push(Field::File(expected_file.clone()));
+            }
+        }
+
+        // If mirror mode is activated (default), each local file that is not in the remote source folder will be added to the deletion list
+        if self.mirror_mode {
+            let mut expected_local_file_list: Vec<String> = vec![];
+            for specific_remote_src_path in expected_remote_file_list.iter() {
+
+                expected_local_file_list.push(
+                    translate_path(
+                                self.remote_src.clone(),
+                                specific_remote_src_path.to_string(),
+                                self.local_dest.display().to_string())
+                    );
+            }
+
+            for local_file in actual_local_file_list.iter() {
+                if ! expected_local_file_list.contains(local_file) {
+                    files_changes.push(
+                        Field::DelFile(local_file.clone())
+                    );
+                }
             }
         }
 
@@ -464,8 +486,34 @@ impl FetchAction {
             }
         }
 
+        if self.mirror_mode {
+            for change in request.changes.iter() {
+                match change { // TODO : add error handling here
+                    Field::DelFolder(specific_remote_src_path) => {
+                        let _ = fs::remove_dir_all(
+                            translate_path(
+                                self.remote_src.clone(), 
+                                String::from(specific_remote_src_path), 
+                                self.local_dest.display().to_string()
+                            ));
+                    }
+                    Field::DelFile(specific_remote_src_path) => {
+                        let _ = fs::remove_file(
+                            translate_path(
+                                self.remote_src.clone(), 
+                                String::from(specific_remote_src_path), 
+                                self.local_dest.display().to_string()
+                            ));
+                    }
+                    _ => {}
+                    
+                }
+            }
+        }
+
         Ok(())
     }
+
 }
 
 // remote_src_path: "/etc/apt"
@@ -483,10 +531,13 @@ fn translate_path(remote_src_path: String, specific_remote_src_path: String, loc
             formatted_remote_src_path.push('/');
         }
 
-        // Then we replace remote_src_path with local_dest_path in specific_remote_src_path
-        let final_local_path = specific_remote_src_path.replace(&formatted_remote_src_path, &formatted_local_dest_path);
+        if specific_remote_src_path == remote_src_path {
+            // In this case, the result is just the local_dest_path
+            return local_dest_path;
+        } else {
+            // We replace remote_src_path with local_dest_path in specific_remote_src_path
+            return specific_remote_src_path.replace(&formatted_remote_src_path, &formatted_local_dest_path);
+        }
 
-        // PathBuf::from(final_local_path)
-        final_local_path
 }
 
