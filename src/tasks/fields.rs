@@ -25,6 +25,8 @@ use std::vec::Vec;
 pub enum Field {
     Branch,
     Content,
+    DelFile(String),
+    DelFolder(String),
     Disable,
     Enable,
     Gecos,
