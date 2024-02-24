@@ -19,7 +19,7 @@ use std::path::Path;
 use crate::connection::connection::Connection;
 use crate::connection::command::cmd_info;
 use crate::tasks::request::{TaskRequest, TaskRequestType};
-use crate::tasks::response::TaskResponse;
+use crate::tasks::response::{SuccessfulCommand, TaskResponse};
 use crate::inventory::hosts::{Host,HostOSType};
 use crate::playbooks::traversal::RunState;
 use crate::tasks::fields::Field;
@@ -111,7 +111,7 @@ impl Remote {
         return self.internal_run(request, cmd, Safety::Safe, check_rc, UseSudo::Yes, Forward::No);
     }
 
-    pub fn run_with_backup_cmd(&self, request: &Arc<TaskRequest>, main_cmd: &String, backup_cmd: &String, check_rc: CheckRc) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+    pub fn run_with_backup_cmd(&self, request: &Arc<TaskRequest>, main_cmd: &String, backup_cmd: &String, check_rc: CheckRc) -> (Result<Arc<TaskResponse>,Arc<TaskResponse>>, SuccessfulCommand) {
         return self.internal_run_with_backup_cmd(request, main_cmd, backup_cmd, Safety::Safe, check_rc, UseSudo::Yes, Forward::No);
     }
 
@@ -175,7 +175,7 @@ impl Remote {
     }
 
     fn internal_run_with_backup_cmd(&self, request: &Arc<TaskRequest>, main_cmd: &String, backup_cmd: &String, 
-        safe: Safety, check_rc: CheckRc, use_sudo: UseSudo, forward: Forward) -> Result<Arc<TaskResponse>,Arc<TaskResponse>> {
+        safe: Safety, check_rc: CheckRc, use_sudo: UseSudo, forward: Forward) -> (Result<Arc<TaskResponse>,Arc<TaskResponse>>, SuccessfulCommand) {
         
         assert!(request.request_type != TaskRequestType::Validate, "commands cannot be run in validate stage");
 
@@ -186,11 +186,11 @@ impl Remote {
             // check for invalid shell parameters
             match screen_general_input_loose(&main_cmd) {
                 Ok(_x) => {},
-                Err(y) => return Err(self.response.is_failed(request, &y.clone()))
+                Err(y) => return (Err(self.response.is_failed(request, &y.clone())), SuccessfulCommand::None)
             }
             match screen_general_input_loose(&backup_cmd) {
                 Ok(_x) => {},
-                Err(y) => return Err(self.response.is_failed(request, &y.clone()))
+                Err(y) => return (Err(self.response.is_failed(request, &y.clone())), SuccessfulCommand::None)
             }
         }
 
@@ -200,14 +200,14 @@ impl Remote {
         let main_cmd_out = match use_sudo {
             UseSudo::Yes => match self.template.add_sudo_details(request, &main_cmd) {
                 Ok(x) => x,
-                Err(y) => { return Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))); }
+                Err(y) => { return (Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))), SuccessfulCommand::None); }
             },
             UseSudo::No => main_cmd.clone() 
         };
         let backup_cmd_out = match use_sudo {
             UseSudo::Yes => match self.template.add_sudo_details(request, &backup_cmd) {
                 Ok(x) => x,
-                Err(y) => { return Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))); }
+                Err(y) => { return (Err(self.response.is_failed(request, &format!("failure constructing sudo command: {}", y))), SuccessfulCommand::None); }
             },
             UseSudo::No => backup_cmd.clone() 
         };
@@ -227,17 +227,17 @@ impl Remote {
                 let ok_result = backup_result.as_ref().unwrap();
                 let backup_cmd_result = ok_result.command_result.as_ref().as_ref().unwrap();
                 if backup_cmd_result.rc != 0 {
-                    return Err(self.response.command_failed(request, &Arc::new(Some(backup_cmd_result.clone()))));
+                    return (Err(self.response.command_failed(request, &Arc::new(Some(backup_cmd_result.clone())))), SuccessfulCommand::None);
                 } else {
-                    return backup_result;
+                    return (backup_result, SuccessfulCommand::Backup);
                 }
             }
 
-            return Err(self.response.command_failed(request, &Arc::new(Some(main_cmd_result.clone()))));
+            return (Err(self.response.command_failed(request, &Arc::new(Some(main_cmd_result.clone())))), SuccessfulCommand::None);
         }
 
 
-        return main_result;
+        return (main_result, SuccessfulCommand::Main);
     }
     // the OS type of a host is set on connection by automatically running a discovery command
 

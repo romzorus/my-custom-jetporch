@@ -54,3 +54,9 @@ pub struct TaskResponse {
 
 //impl TaskResponse {
 //}
+
+pub enum SuccessfulCommand {
+    Main,
+    Backup,
+    None
+}
