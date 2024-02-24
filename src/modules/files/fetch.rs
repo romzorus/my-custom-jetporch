@@ -24,6 +24,9 @@ use std::sync::Arc;
 use std::vec::Vec;
 use std::fs;
 
+use self::response::SuccessfulCommand;
+
+// TODO : this code still has a lot of repetition -> create functions
 const MODULE: &str = "fetch";
 
 #[derive(Deserialize,Debug)]
@@ -144,7 +147,7 @@ impl IsAction for FetchAction {
                         Ok(_) => {
                             return Ok(handle.response.is_created(request));
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             return Err(handle.response.is_failed(request, &String::from("Unable to fetch the folder")));
                         }
                     }
@@ -153,7 +156,7 @@ impl IsAction for FetchAction {
                         Ok(_) => {
                             return Ok(handle.response.is_created(request));
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             return Err(handle.response.is_failed(request, &String::from("Unable to fetch the file")));
                         }
                     }
@@ -211,65 +214,119 @@ impl FetchAction {
         let main_cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
         let backup_cmd_remote_folder_list = format!("du -a {} | cut -f 2", self.remote_src);
         
-        let raw_remote_folder_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
+        let (raw_remote_folder_list_result, successfulcmd) = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
         
-        match raw_remote_folder_list_result {
-            Ok(r) => {
-                let (_rc, remote_folder_list) = cmd_info(&r);
-
-                for specific_remote_src_path in remote_folder_list.lines() {
-                    // The if statement testing if the path is a directory is mandatory since the backup 'du' command lists everything (files and folders).
-                    if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
-                        let _ = fs::create_dir_all(
-                            translate_path(
-                                self.remote_src.clone(), 
-                                String::from(specific_remote_src_path), 
-                                self.local_dest.display().to_string()
-                            ));
+        match successfulcmd {
+            SuccessfulCommand::Main => {
+                match raw_remote_folder_list_result {
+                    Ok(r) => {
+                        let (_rc, remote_folder_list) = cmd_info(&r);
+                        for specific_remote_src_path in remote_folder_list.lines() {
+                            let _ = fs::create_dir_all(
+                                translate_path(
+                                    self.remote_src.clone(), 
+                                    String::from(specific_remote_src_path), 
+                                    self.local_dest.display().to_string()
+                                ));
+                        }
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
                     }
                 }
+
             }
-            Err(e) => {
-                return Err(e);
+            SuccessfulCommand::Backup => {
+                match raw_remote_folder_list_result {
+                    Ok(r) => {
+                        let (_rc, remote_folder_list) = cmd_info(&r);
+                        for specific_remote_src_path in remote_folder_list.lines() {
+                            if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
+                                let _ = fs::create_dir_all(
+                                translate_path(
+                                    self.remote_src.clone(), 
+                                    String::from(specific_remote_src_path), 
+                                    self.local_dest.display().to_string()
+                                ));
+                            }
+                        }
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
+                    }
+                }
+
+            }
+            SuccessfulCommand::None => {
+                return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
             }
         }
+
 
         // Then fetch the files and place them inside the local dest folder structure.
         let main_cmd_remote_file_list = format!("find {} -type f", self.remote_src);
         let backup_cmd_remote_file_list = format!("du -a {} | cut -f 2", self.remote_src);
 
-        let raw_remote_files_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
+        let (raw_remote_files_list_result, successfulcmd) = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
 
-        match raw_remote_files_list_result {
-            Ok(r) => {
-                let (_rc, remote_files_list) = cmd_info(&r);
-
-                for remote_file_path in remote_files_list.lines() {
-                    // The if statement testing if the path is a file is mandatory since the backup 'du' command lists everything (files and folders).
-                    if handle.remote.get_is_file(request, &remote_file_path.to_string()).unwrap() {
-
-                        let local_dest_file_path = translate_path(
-                            self.remote_src.clone(), 
-                            String::from(remote_file_path), 
-                            self.local_dest.display().to_string()
-                        );
-                        let _ = handle.remote.fetch_file(
-                            request,
-                            &remote_file_path.to_string(),
-                            &PathBuf::from(local_dest_file_path)
-                        );
+        match successfulcmd {
+            SuccessfulCommand::Main => {
+                // let Ok(r) = raw_remote_files_list_result;
+                match raw_remote_files_list_result {
+                    Ok(r) => {
+                        let (_rc, remote_files_list) = cmd_info(&r);
+                        for remote_file_path in remote_files_list.lines() {
+                            let local_dest_file_path = translate_path(
+                                self.remote_src.clone(), 
+                                String::from(remote_file_path), 
+                                self.local_dest.display().to_string()
+                            );
+                            let _ = handle.remote.fetch_file(
+                                request,
+                                &remote_file_path.to_string(),
+                                &PathBuf::from(local_dest_file_path)
+                            );
+                        }
+                        return Ok(());
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
                     }
                 }
 
-                return Ok(());
             }
-            Err(e) => {
-                return Err(e);
+            SuccessfulCommand::Backup => {
+                // let Ok(r) = raw_remote_files_list_result;
+                match raw_remote_files_list_result {
+                    Ok(r) => {
+                        let (_rc, remote_files_list) = cmd_info(&r);
+                        for remote_file_path in remote_files_list.lines() {
+                            if handle.remote.get_is_file(request, &remote_file_path.to_string()).unwrap() {
+                                let local_dest_file_path = translate_path(
+                                self.remote_src.clone(), 
+                                String::from(remote_file_path), 
+                                self.local_dest.display().to_string()
+                                );
+                                let _ = handle.remote.fetch_file(
+                                    request,
+                                    &remote_file_path.to_string(),
+                                    &PathBuf::from(local_dest_file_path)
+                                );
+                            }
+                        }
+                        return Ok(());
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
+                    }
+                }
+
+            }
+            SuccessfulCommand::None => {
+                return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
             }
         }
 
-        
-        
     }
 
     pub fn compare_folders(&self, handle: &Arc<TaskHandle>, request: &Arc<TaskRequest>,) -> Result<Vec<Field>, Arc<TaskResponse>> {
@@ -279,31 +336,52 @@ impl FetchAction {
         let main_cmd_remote_folder_list = format!("find {} -type d", self.remote_src);
         let backup_cmd_remote_folder_list = format!("du -a {} | cut -f 2", self.remote_src);
 
-        let raw_folder_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
+        let (raw_folder_list_result, successfulcmd) = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_folder_list, &backup_cmd_remote_folder_list, CheckRc::Checked);
         let mut expected_local_folder_structure: Vec<String> = vec![];
 
-
-        match raw_folder_list_result {
-            Ok(r) => {
-                let (_rc, folder_list) = cmd_info(&r);
-                for specific_remote_src_path in folder_list.lines() {
-
-                    // The if statement testing if the path is a directory is mandatory since the backup 'du' command lists everything (files and folders).
-                    if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
-                        expected_local_folder_structure.push(
-                            translate_path(
-                                self.remote_src.clone(),
-                                specific_remote_src_path.to_string(),
-                                self.local_dest.display().to_string())
-                        );
+        match successfulcmd {
+            SuccessfulCommand::Main => {
+                match raw_folder_list_result {
+                    Ok(r) => {
+                        let (_rc, folder_list) = cmd_info(&r);
+                        for specific_remote_src_path in folder_list.lines() {
+                            expected_local_folder_structure.push(
+                                translate_path(
+                                    self.remote_src.clone(),
+                                    specific_remote_src_path.to_string(),
+                                    self.local_dest.display().to_string())
+                            );
+                        }
                     }
-
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
+                    }
                 }
             }
-            Err(e) => {
-                println!("Error with \'find\' command ..."); // example: 'find' not in amazonlinux docker image by default
-                println!("Error with \'du\' command: {:?}", e);
+            SuccessfulCommand::Backup => {
+                match raw_folder_list_result {
+                    Ok(r) => {
+                        let (_rc, folder_list) = cmd_info(&r);
+                        for specific_remote_src_path in folder_list.lines() {
+                
+                            // The if statement testing if the path is a directory is mandatory since the backup 'du' command lists everything (files and folders).
+                            if handle.remote.get_is_directory(request, &specific_remote_src_path.to_string()).unwrap() {
+                                expected_local_folder_structure.push(
+                                    translate_path(
+                                        self.remote_src.clone(),
+                                        specific_remote_src_path.to_string(),
+                                        self.local_dest.display().to_string())
+                                );
+                            }
+                        }
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
+                    }
+                }
 
+            }
+            SuccessfulCommand::None => {
                 return Err(handle.response.is_failed(request, &"Unable to get the remote folder structure".to_string()));
             }
         }
@@ -361,23 +439,41 @@ impl FetchAction {
         let main_cmd_remote_file_list = format!("find {} -type f", self.remote_src);
         let backup_cmd_remote_file_list = format!("du -a {} | cut -f 2", self.remote_src);
 
-        let raw_remote_file_list_result = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
+        let (raw_remote_file_list_result, successfulcmd) = handle.remote.run_with_backup_cmd(request, &main_cmd_remote_file_list, &backup_cmd_remote_file_list, CheckRc::Checked);
         let mut expected_remote_file_list: Vec<String> = vec![];
 
-
-        match raw_remote_file_list_result {
-            Ok(r) => {
-                let (_rc, raw_file_list) = cmd_info(&r);
-                for specific_remote_src_path in raw_file_list.lines() {
-                    // The if statement testing if the path is a file is mandatory since the backup 'du' command lists everything (files and folders).
-                    if handle.remote.get_is_file(request, &specific_remote_src_path.to_string()).unwrap() {
-                        expected_remote_file_list.push(specific_remote_src_path.to_string());
+        match successfulcmd {
+            SuccessfulCommand::Main => {
+                match raw_remote_file_list_result {
+                    Ok(r) => {
+                        let (_rc, files_list) = cmd_info(&r);
+                        for specific_remote_src_path in files_list.lines() {
+                            expected_remote_file_list.push(specific_remote_src_path.to_string());
+                        }
                     }
-                    
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
+                    }
                 }
             }
-            Err(e) => {
-                return Err(e);
+            SuccessfulCommand::Backup => {
+                match raw_remote_file_list_result {
+                    Ok(r) => {
+                        let (_rc, files_list) = cmd_info(&r);
+                        for specific_remote_src_path in files_list.lines() {
+                            // The if statement testing if the path is a file is mandatory since the backup 'du' command lists everything (files and folders).
+                            if handle.remote.get_is_file(request, &specific_remote_src_path.to_string()).unwrap() {
+                                expected_remote_file_list.push(specific_remote_src_path.to_string());
+                            }
+                        }
+                    }
+                    Err(_e) => {
+                        return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
+                    }
+                }
+            }
+            SuccessfulCommand::None => {
+                return Err(handle.response.is_failed(request, &"Unable to get the remote files list".to_string()));
             }
         }
 
