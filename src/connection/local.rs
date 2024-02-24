@@ -146,8 +146,8 @@ impl Connection for LocalConnection {
         }
     }
 
-    fn fetch_file(&self, response: &Arc<Response>, request: &Arc<TaskRequest>, remote_src: &String, local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>> {
-        // To be completed : fetch_file() in local mode is just copying
+    fn fetch_file(&self, _response: &Arc<Response>, _request: &Arc<TaskRequest>, _remote_src: &String, _local_dest: &PathBuf) -> Result<(), Arc<TaskResponse>> {
+        // To be completed : fetch_file() in local mode is just local copying
         Ok(())
     }
 
