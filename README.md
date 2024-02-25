@@ -1,4 +1,4 @@
-# Ansible in Rust : jetp
+# Automation tool written in Rust : jetp
 
 This project is a fork of the [jetporch](https://github.com/jetporch/jetporch) project.
 
