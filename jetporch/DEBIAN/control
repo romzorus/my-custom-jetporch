@@ -1,0 +1,8 @@
+Package: jetporch
+Version: 0.0.2
+Section: utils
+Priority: optional
+Architecture: all
+Build-Depends: libssl-dev, pkg-config
+Maintainer: romzorus <romzorus591@gmail.com>
+Description: Automation tool written in Rust
