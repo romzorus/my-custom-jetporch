@@ -24,10 +24,10 @@ do
 done
 
 # Here we clean the 'know_hosts' file of the host
-CONTAINERS_PUBKEY_LIST=$(cat $ContainerList | grep "container-pubkey" | cut -d '"' -f 4)
-for ContainerPubKey in $CONTAINERS_PUBKEY_LIST
+CONTAINERS_IP_LIST=$(cat $ContainerList | grep "container_ip" | cut -d '"' -f 4)
+for ContainerIp in $CONTAINERS_IP_LIST
 do
-    sed -i "/$ContainerPubKey/d" ~/.ssh/known_hosts
+    ssh-keygen -f ~/.ssh/known_hosts -R "$ContainerIp"
 done
 
 # Finally, we remove $ContainerList.
