@@ -1,8 +1,11 @@
+***Now focusing on another project : [Dux](https://gitlab.com/dux-tool/dux)***
+***but feel free to send comments/requests/contributions as I still work on this when needed !***
+
 # Automation tool written in Rust : jetp
 
 This project is a fork of the [jetporch](https://github.com/jetporch/jetporch) project.
 
-**Feel free to send comments/requests/contributions if you feel like it !**
+**Feel free to send comments/requests/contributions !**
 
 # Core modules
 
