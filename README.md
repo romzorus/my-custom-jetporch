@@ -1,5 +1,7 @@
 ***Now focusing on another project : [Dux](https://gitlab.com/dux-tool/dux)***
-***but feel free to send comments/requests/contributions as I still work on this when needed !***
+
+***But feel free to send comments/requests/contributions. I can still work on this if needed !***
+
 
 # Automation tool written in Rust : jetp
 
